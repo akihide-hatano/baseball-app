@@ -64,4 +64,8 @@ class Team extends Model
         return $this->hasMany(PlayerStat::class);
     }
 
+    public function yearlyTeamStats(){
+        return $this->hasMany(YearlyTeamStat::class);
+    }
+
 }
