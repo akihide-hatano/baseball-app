@@ -27,6 +27,8 @@ return new class extends Migration
             $table->integer('weight')->nullable();
             // ★追加: 特技/特徴（例: 広角打法, スプリットなど）
             $table->string('specialty')->nullable();
+            //選手説明
+            $table->string('description')->nullable();
             // ★追加: 出身地
             $table->string('hometown')->nullable();
             $table->timestamps();
