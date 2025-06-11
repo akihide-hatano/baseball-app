@@ -4,17 +4,29 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Player;
+use App\Models\Team;
 
 class PlayerController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $players = Player::all(); // 全ての選手データを取得
-        dd($players);
-        return view('players.index', compact('players')); // 'players.index'ビューに'players'変数を渡して表示
+        $teams = Team::all();
+
+        // 選手をEager Loadingで取得
+        $query = Player::with('Team'); // currentTeamリレーションをEagerロード
+
+        // リクエストにteam_idが存在する場合、そのチームで選手を絞り込む
+        if ($request->filled('team_id') && $request->team_id != '') {
+            $query->where('team_id', $request->team_id);
+        }
+
+        // ページネーションを適用
+        $players = $query->paginate(10);
+        // ビューに選手データとチームデータを渡す
+        return view('players.index', compact('players', 'teams'));
     }
 
     /**
@@ -40,7 +52,7 @@ class PlayerController extends Controller
      */
     public function show(Player $player) // Laravel 8以降では、IDの代わりにモデルを型ヒントとして指定すると、自動的にそのIDのモデルインスタンスが取得されます (Route Model Binding)
     {
-        // ここではRoute Model Bindingを使用しているため、$playerが直接インスタンスになります
+        $player->load('team');
         return view('players.show', compact('player'));
     }
 

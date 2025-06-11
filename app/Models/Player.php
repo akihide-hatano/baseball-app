@@ -24,7 +24,7 @@ class Player extends Model
     /**
      * この選手が現在所属するチームを取得
      */
-    public function currentTeam()
+    public function Team()
     {
         return $this->belongsTo(Team::class, 'team_id');
     }
