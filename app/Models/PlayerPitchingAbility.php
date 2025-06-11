@@ -12,26 +12,18 @@ class PlayerPitchingAbility extends Model
     protected $fillable = [
         'player_id',
         'year',
-        'velocity',         // 球速
-        'control',          // コントロール
-        'stamina',          // スタミナ
-        'pitch_type_1',     // 変化球タイプ1
-        'pitch_level_1',    // 変化球レベル1
+        'pitch_control',    // 変化球の制球力
+        'pitch_stamina',    // スタミナ
+        'average_velocity', // 平均球速
+        'pitch_type_1',     // ★この行と以下4行を追加（またはコメントアウト解除）★
         'pitch_type_2',
-        'pitch_level_2',
         'pitch_type_3',
-        'pitch_level_3',
         'pitch_type_4',
-        'pitch_level_4',
         'pitch_type_5',
-        'pitch_level_5',
-        'pitching_style',   // 投球スタイル
-        'overall_rank',     // 総合能力ランク
+        'overall_rank',
+        'special_skills',
     ];
 
-    /**
-     * この能力が紐付く選手を取得
-     */
     public function player()
     {
         return $this->belongsTo(Player::class);

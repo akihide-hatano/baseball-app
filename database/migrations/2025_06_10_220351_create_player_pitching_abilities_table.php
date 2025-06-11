@@ -13,35 +13,27 @@ return new class extends Migration
     {
         Schema::create('player_pitching_abilities', function (Blueprint $table) {
             $table->id();
-            // ★追加: 選手ID (playersテーブルへの外部キー)
             $table->foreignId('player_id')->constrained()->onDelete('cascade');
-            // ★追加: 能力の年度
             $table->integer('year'); // 能力の年度 (例: 2024年の能力)
 
-            // 投手能力値（Integer型で1-100など）
-            $table->integer('velocity')->default(0); // 球速 (km/h)
-            $table->integer('control')->default(0); // コントロール (1-100)
-            $table->integer('stamina')->default(0); // スタミナ (1-100)
+            // 投球能力値
+            $table->integer('pitch_control')->default(0); // 制球力
+            $table->integer('pitch_stamina')->default(0); // スタミナ
+            $table->decimal('average_velocity', 4, 1)->default(0.0); // 平均球速 (例: 145.5)
 
-            // 変化球 (最大5種類程度を想定し、それぞれタイプとレベルを持つ)
-            $table->string('pitch_type_1')->nullable();
-            $table->integer('pitch_level_1')->nullable();
+            // 変化球の種類とレベル (例: 'カーブ:4', 'フォーク:3' など)
+            $table->string('pitch_type_1')->nullable(); // ★この行と以下4行を追加（またはコメントアウト解除）★
             $table->string('pitch_type_2')->nullable();
-            $table->integer('pitch_level_2')->nullable();
             $table->string('pitch_type_3')->nullable();
-            $table->integer('pitch_level_3')->nullable();
             $table->string('pitch_type_4')->nullable();
-            $table->integer('pitch_level_4')->nullable();
             $table->string('pitch_type_5')->nullable();
-            $table->integer('pitch_level_5')->nullable();
 
-            $table->string('pitching_style')->nullable(); // 投球スタイル（例: '本格派', '技巧派', 'クローザー'）
-            $table->integer('overall_rank')->nullable(); // 総合能力ランク
+            $table->integer('overall_rank')->nullable(); // 総合能力ランク (例: 70A, 80Sなど表示用)
+            $table->text('special_skills')->nullable(); // 特殊能力（カンマ区切り文字列またはJSONなど）
 
             $table->timestamps();
 
-            // 同じ選手の同じ年度の能力は1つ
-            $table->unique(['player_id', 'year']);
+            $table->unique(['player_id', 'year']); // 同じ選手の同じ年度の能力は1つ
         });
     }
 
