@@ -24,7 +24,7 @@ class PlayerController extends Controller
         }
 
         // ページネーションを適用
-        $players = $query->paginate(10);
+        $players = $query->paginate(12);
         // ビューに選手データとチームデータを渡す
         return view('players.index', compact('players', 'teams'));
     }

@@ -37,9 +37,16 @@ class TeamController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Team $team) // Route Model Bindingを活用
+    public function show($id) // ★引数を$idに変更★
     {
-        // ここではRoute Model Bindingを使用しているため、$teamが直接インスタンスになります
+        $team = Team::find($id); // ★IDを使って手動で検索★
+
+        if (!$team) {
+            // チームが見つからなかった場合の処理 (例: 404エラーを返す)
+            abort(404, 'Team not found!');
+        }
+
+
         return view('teams.show', compact('team'));
     }
 

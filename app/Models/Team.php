@@ -18,6 +18,21 @@ class Team extends Model
     ];
 
     /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'founded_at' => 'date', // ★この行を追加または確認★
+    ];
+
+    // リーグへのリレーション (もしLeagueモデルがある場合)
+    public function league()
+    {
+        return $this->belongsTo(League::class);
+    }
+
+    /**
      * このチームに所属する選手を取得
      */
     public function players()
