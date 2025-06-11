@@ -20,8 +20,6 @@ return new class extends Migration
             // 試合における役割
             $table->boolean('is_starter')->default(false); // 先発出場か (野手・投手共通)
             $table->integer('batting_order')->nullable(); // 打順 (1-9など, 投手はnull)
-            // 複数ポジションを持つ場合、中間テーブルにするか、カンマ区切りにするか、主ポジションのみにするか検討が必要
-            // 今回は主ポジションのみとして、position_id で紐付け
             $table->foreignId('position_id')->nullable()->constrained()->onDelete('set null'); // その試合での主守備位置 (投手も含む)
 
             // 打撃成績
@@ -44,21 +42,21 @@ return new class extends Migration
             $table->integer('runs_scored')->default(0); // 得点 (その選手がホームに帰還した回数)
 
 
-            // 投球成績
-            $table->decimal('innings_pitched', 4, 1)->default(0.0); // 投球回
-            $table->integer('earned_runs')->default(0); // 自責点
-            $table->integer('runs_allowed')->default(0); // 失点 (投手が関与した失点)
-            $table->integer('hits_allowed')->default(0); // 被安打
-            $table->integer('home_runs_allowed')->default(0); // 被本塁打
-            $table->integer('walks_allowed')->default(0); // 与四球
-            $table->integer('strikeouts_pitched')->default(0); // 奪三振 (投手)
-            $table->integer('pitches_thrown')->default(0); // 投球数
+            // 投球成績 (野手の場合はnullを許容)
+            $table->decimal('innings_pitched', 4, 1)->nullable(); // ★nullable()を追加★
+            $table->integer('earned_runs')->nullable(); // ★nullable()を追加★
+            $table->integer('runs_allowed')->nullable(); // ★nullable()を追加★
+            $table->integer('hits_allowed')->nullable(); // ★nullable()を追加★
+            $table->integer('home_runs_allowed')->nullable(); // ★nullable()を追加★
+            $table->integer('walks_allowed')->nullable(); // ★nullable()を追加★
+            $table->integer('strikeouts_pitched')->nullable(); // ★nullable()を追加★
+            $table->integer('pitches_thrown')->nullable(); // ★nullable()を追加★
 
-            // 投手の勝敗セーブホールド
-            $table->boolean('is_winner_pitcher')->default(false); // 勝ち投手か
-            $table->boolean('is_loser_pitcher')->default(false); // 負け投手か
-            $table->boolean('is_save_pitcher')->default(false); // セーブ投手か
-            $table->boolean('is_hold_pitcher')->default(false); // ホールド投手か
+            // 投手の勝敗セーブホールド (野手の場合はnullを許容)
+            $table->boolean('is_winner_pitcher')->nullable(); // ★nullable()を追加★
+            $table->boolean('is_loser_pitcher')->nullable(); // ★nullable()を追加★
+            $table->boolean('is_save_pitcher')->nullable(); // ★nullable()を追加★
+            $table->boolean('is_hold_pitcher')->nullable(); // ★nullable()を追加★
 
             $table->timestamps();
 

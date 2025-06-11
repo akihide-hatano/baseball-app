@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('player_stats', function (Blueprint $table) {
+        Schema::create('player_stats', function (Blueprint $table) { // ★テーブル名が 'player_stats' であることを確認！★
             $table->id();
             // ★追加: 選手ID (playersテーブルへの外部キー)
             $table->foreignId('player_id')->constrained()->onDelete('cascade');
