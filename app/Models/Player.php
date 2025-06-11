@@ -61,6 +61,24 @@ class Player extends Model
         return $this->hasMany(PlayerPitchingAbility::class);
     }
 
+   /**
+     * (YearlyBattingStat モデルへのリレーション) ★ここを確実に追加・修正★
+     */
+    public function yearlyBattingStats()
+    {
+        return $this->hasMany(YearlyBattingStat::class, 'player_id');
+    }
+
+   /**
+     * (YearlyBattingStat モデルへのリレーション) ★ここを確実に追加・修正★
+     */
+    public function yearlyPitchingStats()
+    {
+        return $this->hasMany(YearlyPitchingStat::class, 'player_id');
+    }
+
+
+
     /**
      * この選手が打者として出場した試合ごとの成績を取得
      */
