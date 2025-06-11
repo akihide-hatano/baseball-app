@@ -7,6 +7,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use App\Models\Team; // Teamモデルを使用
 use App\Models\Game; // Gameモデルを使用
+use Faker\Factory as Faker; // Faker をuseする
 
 class GameSeeder extends Seeder
 {
@@ -15,16 +16,21 @@ class GameSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->command->info('試合データの生成を開始します...');
+
+        Game::truncate(); // 既存のデータをクリア
+
         $teams = Team::all();
         if ($teams->isEmpty()) {
             $this->command->warn('チームデータがありません。先にTeamSeederを実行してください。');
             return;
         }
 
-        $faker = \Faker\Factory::create('ja_JP');
+        $faker = Faker::create('ja_JP');
 
-        // 試合数を指定 (例: 300試合)
-        $numberOfGamesToCreate = 300;
+        // ★修正点：生成する試合数を増やす (1000〜1500試合)★
+        $numberOfGamesToCreate = $faker->numberBetween(1000, 1500);
+
 
         // 試合が行われる年の範囲
         $startYear = 2023;
@@ -33,28 +39,19 @@ class GameSeeder extends Seeder
         for ($i = 0; $i < $numberOfGamesToCreate; $i++) {
             // ランダムな2つの異なるチームを選択
             $homeTeam = $faker->randomElement($teams);
-            $awayTeam = $faker->randomElement($teams->except($homeTeam->id)); // ホームチーム以外のチームを選択
+            $awayTeam = $faker->randomElement($teams->except($homeTeam->id));
 
-            // 同じリーグのチーム同士で対戦するように調整することも可能ですが、
-            // 今回はシンプルに全てのチームからランダムに選択します。
-            // 必要であれば、ここで $homeTeam->league_id と $awayTeam->league_id を比較するロジックを追加できます。
-
-            // ランダムな日付と時刻を生成
-            $gameDate = $faker->dateTimeBetween($startYear . '-03-01', $endYear . '-10-31'); // シーズン期間
-            $gameTime = $faker->dateTimeBetween('17:00:00', '21:00:00')->format('H:i:s');
-            $fullDateTime = $gameDate->format('Y-m-d') . ' ' . $gameTime;
+            // ランダムな日付を生成（シーズン期間）
+            $gameDate = $faker->dateTimeBetween($startYear . '-03-01', $endYear . '-10-31');
+            // ★修正点：game_time を再生成★
+            $gameTime = $faker->dateTimeBetween('17:00:00', '21:00:00')->format('H:i:s'); // 例: 17:00から21:00の間
 
             // ランダムなスコアを生成 (現実的な範囲で)
             $homeScore = $faker->numberBetween(0, 15);
             $awayScore = $faker->numberBetween(0, 15);
 
-            // ゲーム結果
+            // ゲーム結果 (シンプル化)
             $gameResult = ($homeScore > $awayScore) ? 'Home Win' : (($awayScore > $homeScore) ? 'Away Win' : 'Draw');
-            if ($homeScore == $awayScore && $gameDate->format('m-d') >= '07-01' && $gameDate->format('m-d') <= '09-30') {
-                // 交流戦以外の中盤戦以降は引き分けが多いため、引き分けも考慮
-                // プロ野球の規定に基づき延長戦なしで引き分けになることもあるため
-            }
-
 
             // 架空のスタジアム名
             $stadiums = [
@@ -68,11 +65,11 @@ class GameSeeder extends Seeder
                 'home_team_id' => $homeTeam->id,
                 'away_team_id' => $awayTeam->id,
                 'game_date'    => $gameDate->format('Y-m-d'),
-                'game_time'    => $gameTime,
+                'game_time'    => $gameTime, // ★ここを再度追加！★
                 'stadium'      => $stadium,
                 'home_score'   => $homeScore,
                 'away_score'   => $awayScore,
-                'game_result'  => $gameResult, // 'Home Win', 'Away Win', 'Draw'
+                'game_result'  => $gameResult,
                 'created_at'   => now(),
                 'updated_at'   => now(),
             ]);

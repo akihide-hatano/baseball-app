@@ -4,100 +4,74 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\Player;
 use App\Models\Team;
+use App\Models\Player;
+use App\Models\Position;
+use Faker\Factory as Faker;
+use Illuminate\Support\Facades\DB;
 
 class PlayerSeeder extends Seeder
 {
     /**
      * Run the database seeds.
+     * 選手データと共にrole（役割）を生成します。
      */
     public function run(): void
     {
-        // まずは既存のチームが存在することを確認
-        $teams = Team::all(); // 全チームを取得
-        if ($teams->isEmpty()) {
-            $this->command->warn('チームデータがありません。先にTeamSeederを実行してください。');
+        $this->command->info('選手データの生成を開始します...');
+
+        Player::truncate(); // 既存の選手データをクリア
+        DB::table('player_position')->truncate(); // 中間テーブルもクリア
+
+        $teams = Team::all();
+        $positions = Position::all();
+
+        if ($teams->isEmpty() || $positions->isEmpty()) {
+            $this->command->warn('チームまたはポジションデータがありません。TeamSeederとPositionSeederを実行してください。');
             return;
         }
 
-        // 各チームの現在の背番号を追跡する配列を初期化
-        // チームIDをキーとし、使用済みの背番号の配列を値とする
-        $usedJerseyNumbers = [];
+        $faker = Faker::create('ja_JP');
+
         foreach ($teams as $team) {
-            $usedJerseyNumbers[$team->id] = Player::where('team_id', $team->id)
-                                                    ->pluck('jersey_number')
-                                                    ->filter(function ($number) { return $number !== null; }) // nullの背番号は除外
-                                                    ->toArray();
-        }
-
-        // 野球選手らしい説明文の候補
-        $baseballDescriptions = [
-            '若きスラッガー、長打力と勝負強さが魅力。',
-            '守備の要。堅実な守備と強肩でチームを支える。',
-            'マウンドの支配者。切れ味鋭い変化球で打者を翻弄。',
-            'チームを引っ張るキャプテン。攻守にわたる活躍で貢献。',
-            '走攻守揃った万能プレイヤー。球界の未来を担う逸材。',
-            '精密なコントロールで打者を抑える技巧派投手。',
-            '力強いスイングでホームランを量産する大砲。',
-            '俊足巧打のリードオフマン。出塁率の高さが光る。',
-            '強気のピッチングが魅力のクローザー。セーブ王候補。',
-            '泥臭いプレーもいとわない、チームのムードメーカー。',
-            '正確な送球と抜群の判断力を持つ内野手。',
-            'どんな球も打ち返す、バットコントロールの天才。',
-            '三振の山を築く速球派。強打者も手玉に取る。',
-            'ピンチに強いベテラン。経験でチームを救う。',
-            '代打の切り札。ここぞの場面で結果を出す勝負師。',
-            '伸び盛りの若手。無限の可能性を秘めた期待の星。',
-            'ストレートに威力のある本格派右腕。奪三振も多い。',
-            '変化球のコンビネーションで打者を打ち取る左腕。',
-            '巧みなリードで投手を支える守備型捕手。',
-            'チャンスに強く、一発で試合を決めるスラッガー。',
-        ];
-
-        // Fakerインスタンスを日本語ロケールで取得
-        $faker = \Faker\Factory::create('ja_JP');
-
-        // 150人の選手を生成
-        $numberOfPlayersToCreate = 250;
-
-        for ($i = 0; $i < $numberOfPlayersToCreate; $i++) {
-            // ランダムなチームIDを選択
-            $teamId = $faker->randomElement($teams->pluck('id')->toArray());
-
-            // そのチームでまだ使われていないユニークな背番号を生成
-            $jerseyNumber = null;
-            $attempts = 0;
-            do {
-                $jerseyNumber = $faker->numberBetween(0, 99); // 00-99の範囲で背番号を生成
-                $attempts++;
-                if ($attempts > 250) { // 無限ループ回避のための安全装置
-                    $jerseyNumber = null; // 背番号が見つからなかった場合はnullにする
-                    break;
+            // 各チームに約25〜30人の選手を生成
+            for ($i = 0; $i < $faker->numberBetween(25, 30); $i++) {
+                $randRole = $faker->numberBetween(1, 100);
+                $role = '控え野手'; // デフォルト
+                if ($randRole <= 30) {
+                    $role = '投手';
+                } elseif ($randRole <= 80) {
+                    $role = 'レギュラー野手';
                 }
-            } while (in_array($jerseyNumber, $usedJerseyNumbers[$teamId]));
 
-            // 生成した背番号を使用済みリストに追加
-            if ($jerseyNumber !== null) {
-                $usedJerseyNumbers[$teamId][] = $jerseyNumber;
+                $player = Player::create([
+                    'team_id' => $team->id,
+                    'name' => $faker->name('male'), // ★ここを 'male' に修正★
+                    'jersey_number' => $faker->unique()->numberBetween(0, 99),
+                    'role' => $role,
+                    'date_of_birth' => $faker->dateTimeBetween('-30 years', '-18 years')->format('Y-m-d'),
+                    'height' => $faker->numberBetween(170, 195),
+                    'weight' => $faker->numberBetween(70, 100),
+                    'specialty' => $faker->randomElement(['右投右打', '右投左打', '左投左打', '左投右打', '両打']),
+                    'description' => $faker->optional(0.5)->sentence,
+                    'hometown' => $faker->city,
+                ]);
+
+                if ($role === '投手') {
+                    $pitcherPos = $positions->where('name', '投手')->first();
+                    if ($pitcherPos) {
+                        $player->positions()->attach($pitcherPos->id);
+                    }
+                } else {
+                    $randomPositions = $positions->where('name', '!=', '投手')->random($faker->numberBetween(1, 3));
+                    foreach ($randomPositions as $pos) {
+                        $player->positions()->attach($pos->id);
+                    }
+                }
             }
-
-            // 選手データをファクトリで生成し、jersey_numberとdescriptionを上書きして保存
-            Player::factory()->create([
-                'team_id'       => $teamId,
-                'jersey_number' => $jerseyNumber, // ここでユニークな背番号を割り当てる
-                'name'          => $faker->name('male'), // Fakerインスタンスを直接使用
-                'date_of_birth' => $faker->dateTimeBetween('-35 years', '-18 years')->format('Y-m-d'),
-                'height'        => $faker->numberBetween(165, 195),
-                'weight'        => $faker->numberBetween(65, 100),
-                'specialty'     => $faker->randomElement(['速球派', '変化球派', '巧打者', '強打者', '俊足', '守備職人', 'オールラウンダー']),
-                'description'   => $faker->randomElement($baseballDescriptions), // 野球選手らしい説明文を割り当てる
-                'hometown'      => $faker->prefecture,
-                'created_at'    => now(),
-                'updated_at'    => now(),
-            ]);
+            $faker->unique(true);
         }
 
-        $this->command->info($numberOfPlayersToCreate . '人の選手データを作成しました。');
+        $this->command->info('選手データの生成が完了しました。');
     }
 }

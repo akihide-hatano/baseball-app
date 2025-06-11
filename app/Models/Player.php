@@ -13,6 +13,7 @@ class Player extends Model
         'team_id',
         'name',
         'jersey_number',
+        'role',
         'date_of_birth',
         'height',
         'weight',

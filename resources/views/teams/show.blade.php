@@ -108,7 +108,7 @@
                                     </td>
                                     <td class="py-3 px-4 border-b">
                                         @if($latestBattingStat)
-                                            {{ $latestBattingStat->runs_batted_in }}
+                                            {{ $latestBattingStat->rbi }}
                                         @else
                                             -
                                         @endif
