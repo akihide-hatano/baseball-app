@@ -132,14 +132,28 @@
             @endif
         </div>
 
-        {{-- 選手能力チャート (PlayerBattingAbility) --}}
+        {{-- 選手打撃能力チャート (PlayerBattingAbility) --}}
         <div class="bg-white shadow-xl rounded-lg p-8 mb-8">
-            <h2 class="text-2xl font-bold mb-4 text-indigo-700">選手能力チャート</h2>
+            <h2 class="text-2xl font-bold mb-4 text-indigo-700">選手打撃能力チャート</h2>
             @if(empty($playerBattingAbilitiesData))
-                <p class="text-gray-600">この選手の能力データはありません。</p>
+                <p class="text-gray-600">この選手の打撃能力データはありません。</p>
             @else
                 <div class="flex justify-center items-center">
-                    <canvas id="battingAbilityChart" class="w-full max-w-lg h-96"></canvas> {{-- グラフ表示用のcanvas --}}
+                    {{-- data-batting-abilities 属性でデータを埋め込みます --}}
+                    <canvas id="battingAbilityChart" class="w-full max-w-lg h-96" data-batting-abilities="{{ json_encode($playerBattingAbilitiesData) }}"></canvas>
+                </div>
+            @endif
+        </div>
+
+        {{-- 選手変化球チャート (PlayerPitchingAbility - Pitch Types) --}}
+        <div class="bg-white shadow-xl rounded-lg p-8 mb-8">
+            <h2 class="text-2xl font-bold mb-4 text-indigo-700">選手変化球チャート</h2>
+            @if(empty($playerPitchingAbilitiesData))
+                <p class="text-gray-600">この選手の変化球データはありません。</p>
+            @else
+                <div class="flex justify-center items-center">
+                    {{-- data-pitching-abilities 属性でデータを埋め込みます --}}
+                    <canvas id="pitchingAbilityChart" class="w-full max-w-lg h-96" data-pitching-abilities="{{ json_encode($playerPitchingAbilitiesData) }}"></canvas>
                 </div>
             @endif
         </div>
@@ -160,72 +174,6 @@
         </div>
     </div>
 
-    <!-- Chart.js の読み込み -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script>
-        // コントローラーから渡されたデータをJavaScript変数に格納
-        const playerBattingAbilitiesData = @json($playerBattingAbilitiesData);
-
-        // データが存在する場合のみグラフを描画
-        if (playerBattingAbilitiesData) {
-            const ctx = document.getElementById('battingAbilityChart').getContext('2d');
-            
-            new Chart(ctx, {
-                type: 'radar',
-                data: {
-                    labels: playerBattingAbilitiesData.labels,
-                    datasets: [{
-                        label: '能力値',
-                        data: playerBattingAbilitiesData.data,
-                        backgroundColor: 'rgba(75, 192, 192, 0.4)', // グラフの塗りつぶし色
-                        borderColor: 'rgba(75, 192, 192, 1)',      // グラフの線の色
-                        borderWidth: 2,
-                        pointBackgroundColor: 'rgba(75, 192, 192, 1)', // ポイントの色
-                        pointBorderColor: '#fff',
-                        pointHoverBackgroundColor: '#fff',
-                        pointHoverBorderColor: 'rgba(75, 192, 192, 1)'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false, // アスペクト比を維持しない (heightを制御可能にする)
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: '選手打撃能力',
-                            font: {
-                                size: 20
-                            }
-                        },
-                        legend: {
-                            display: false // 凡例は非表示
-                        }
-                    },
-                    scales: {
-                        r: {
-                            angleLines: {
-                                color: '#eee' // 角度線の色
-                            },
-                            grid: {
-                                color: '#ccc' // グリッド線の色
-                            },
-                            pointLabels: {
-                                font: {
-                                    size: 14 // ラベルのフォントサイズ
-                                },
-                                color: '#333' // ラベルの文字色
-                            },
-                            suggestedMin: 0, // 最小値
-                            suggestedMax: 100, // 最大値 (能力値の想定最大値)
-                            ticks: {
-                                stepSize: 20, // 20刻みで表示
-                                display: false // メモリの数字は非表示
-                            },
-                            backgroundColor: 'white' // レーダー背景色
-                        }
-                    }
-                }
-            });
-        }
-    </script>
+    <script src="{{ asset('js/playerAbilityChart.js') }}"></script> {{-- ★ここだけに変更★ --}}
 </x-app-layout>

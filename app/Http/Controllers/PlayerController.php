@@ -91,9 +91,42 @@ class PlayerController extends Controller
                 ]
             ];
         }
+        // ★ここから投球能力データの整形ロジックを修正★
+        $playerPitchingAbilitiesData = null;
+        if ($player->pitchingAbilities->isNotEmpty()) {
+            $latestPitchingAbility = $player->pitchingAbilities->first();
 
-        // ビューに 'playerBattingAbilitiesData' も渡す
-        return view('players.show', compact('player', 'playerBattingAbilitiesData'));
+            $pitchLabels = [];
+            $pitchData = [];
+
+            // 変化球の種類とレベルを抽出してグラフデータを作成
+            for ($i = 1; $i <= 5; $i++) {
+                $pitchTypeField = 'pitch_type_' . $i;
+                $pitchInfo = $latestPitchingAbility->$pitchTypeField; // 例: 'カーブ:4'
+
+                if ($pitchInfo) {
+                    $parts = explode(':', $pitchInfo);
+                    if (count($parts) === 2) {
+                        $pitchName = trim($parts[0]);
+                        $pitchLevel = (int)trim($parts[1]);
+
+                        $pitchLabels[] = $pitchName;
+                        $pitchData[] = $pitchLevel;
+                    }
+                }
+            }
+
+            // 変化球データが存在する場合のみ、データを設定
+            if (!empty($pitchLabels)) {
+                $playerPitchingAbilitiesData = [
+                    'labels' => $pitchLabels,
+                    'data' => $pitchData,
+                ];
+            }
+        }
+        // ★ここまで投球能力データの整形ロジックを修正★
+
+        return view('players.show', compact('player', 'playerBattingAbilitiesData', 'playerPitchingAbilitiesData'));
     }
 
     /**
