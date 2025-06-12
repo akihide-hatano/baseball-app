@@ -23,7 +23,7 @@ class Team extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'founded_at' => 'date', // ★この行を追加または確認★
+        'founded_at' => 'datetime', // ★この行を追加または確認★
     ];
 
     // リーグへのリレーション (もしLeagueモデルがある場合)

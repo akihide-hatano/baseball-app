@@ -46,7 +46,6 @@ class TeamController extends Controller
             abort(404, 'Team not found!');
         }
 
-
         return view('teams.show', compact('team'));
     }
 

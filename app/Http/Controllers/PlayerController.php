@@ -50,12 +50,27 @@ class PlayerController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Player $player) // Laravel 8以降では、IDの代わりにモデルを型ヒントとして指定すると、自動的にそのIDのモデルインスタンスが取得されます (Route Model Binding)
+    public function show($id)
     {
-        $player->load('team');
+        // ★ここを追加: 手動でプレイヤーを取得して dd する★
+        $player = Player::find($id);
+        // もし $player が取得できなかった場合（nullの場合）のハンドリング
+        if (!$player) {
+            abort(404, '選手が見つかりませんでした。');
+        }
+
+        $player->load([
+            'team', // チーム情報もロード
+            'yearlyBattingStats' => function ($query) {
+                $query->orderBy('year', 'desc'); // 最新の年を先に取得
+            },
+            'yearlyPitchingStats' => function ($query) { // 投球成績もロード
+                $query->orderBy('year', 'desc'); // 最新の年を先に取得
+            }
+        ]);
+
         return view('players.show', compact('player'));
     }
-
     /**
      * Show the form for editing the specified resource.
      */

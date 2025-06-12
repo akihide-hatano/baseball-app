@@ -122,6 +122,7 @@ class GamePlayerStatSeeder extends Seeder
                         'updated_at'            => now(),
                     ]);
                 } else { // 野手の打撃成績（レギュラー野手、控え野手）
+                    // ★修正点: 変数をここで初期化し、常に定義されているようにする★
                     $plateAppearances = 0;
                     $atBats = 0;
                     $hits = 0;
@@ -139,6 +140,7 @@ class GamePlayerStatSeeder extends Seeder
                     $doublePlays = 0;
                     $errors = 0;
                     $runsScored = 0;
+                    $positionId = null; // ★ここを初期化！★
 
 
                     // 野手の場合、打席に立つかどうかの確率を role に応じて調整
@@ -223,7 +225,7 @@ class GamePlayerStatSeeder extends Seeder
                         }
                         // 四球でも稀に打点 (押し出しなど)
                         $rbi += $faker->boolean(5) ? 1 : 0; // 5%で1打点追加（非常に稀）
-
+                        
                         // 1試合の打点上限をさらに厳しく設定
                         $rbi = min($rbi, 3); // 1試合の打点上限を3に設定（エース級でも滅多に超えない）
                         $rbi = max(0, $rbi); // 0未満にならないように
@@ -251,6 +253,7 @@ class GamePlayerStatSeeder extends Seeder
 
                         // ポジションIDの設定
                         $playerPositions = $player->positions->where('id', '!=', $pitcherPositionId);
+                        // ★修正点: ここで $positionId を定義
                         $positionId = $playerPositions->isEmpty() ? null : $faker->randomElement($playerPositions)->id;
                     }
 
@@ -261,7 +264,8 @@ class GamePlayerStatSeeder extends Seeder
                         'team_id'               => $player->team_id,
                         'is_starter'            => ($player->role === 'レギュラー野手') ? true : $faker->boolean(30),
                         'batting_order'         => ($player->role === 'レギュラー野手') ? $faker->numberBetween(1, 9) : null,
-                        'position_id'           => $positionId,
+                        'position_id'           => $positionId, // ここで使用
+
 
                         'plate_appearances'     => $plateAppearances,
                         'at_bats'               => $atBats,
