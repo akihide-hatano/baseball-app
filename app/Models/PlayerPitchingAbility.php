@@ -20,6 +20,8 @@ class PlayerPitchingAbility extends Model
         'pitch_type_3',
         'pitch_type_4',
         'pitch_type_5',
+        'pitch_type_6', // ★追加★
+        'pitch_type_7', // ★追加★
         'overall_rank',
         'special_skills',
     ];

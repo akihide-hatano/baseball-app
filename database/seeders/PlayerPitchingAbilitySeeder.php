@@ -8,9 +8,13 @@ use App\Models\Player;
 use App\Models\Position;
 use App\Models\PlayerPitchingAbility;
 use Illuminate\Support\Facades\DB;
+use Faker\Factory as Faker;
 
 class PlayerPitchingAbilitySeeder extends Seeder
 {
+    const MIN_VELOCITY = 100.0; // 仮の最小球速 (km/h)
+    const MAX_VELOCITY = 160.0; // 仮の最大球速 (km/h)
+
     /**
      * Run the database seeds.
      */
@@ -20,31 +24,20 @@ class PlayerPitchingAbilitySeeder extends Seeder
 
         PlayerPitchingAbility::truncate();
 
-        $pitcherPosition = Position::where('name', '投手')->first();
-        if (!$pitcherPosition) {
-            $this->command->warn('ポジションデータに「投手」がありません。PositionSeederを確認してください。');
-            return;
-        }
-        $pitcherPositionId = $pitcherPosition->id;
-
-        $pitchers = Player::whereHas('positions', function ($query) use ($pitcherPositionId) {
-            $query->where('position_id', $pitcherPositionId);
-        })->get();
+        $pitchers = Player::where('role', '投手')->get();
 
         if ($pitchers->isEmpty()) {
-            $this->command->warn('「投手」ポジションを持つ選手データがありません。PlayerSeederまたはPlayerPositionSeederを確認してください。');
+            $this->command->warn('「投手」ロールを持つ選手データがありません。PlayerSeederを確認してください。');
             return;
         }
 
-        $faker = \Faker\Factory::create('ja_JP');
+        $faker = Faker::create('ja_JP');
 
-        // 変化球の種類候補 (ストレートは含めない)
-        $pitchTypes = [
-            'フォーク', 'カーブ', 'スライダー', 'チェンジアップ',
-            'シュート', 'シンカー', 'カットボール', 'ツーシーム', 'SFF', 'ナックル'
+        $allPitchTypes = [
+            'カーブ', 'スライダー', 'フォーク', 'チェンジアップ',
+            'シュート', 'カットボール', 'シンカー'
         ];
 
-        // 特殊能力の候補 (投手向け)
         $specialSkills = [
             'ノビB', 'キレB', 'クイックB', '牽制○', '打たれ強さB', '対ピンチA',
             '安定度B', '重い球', '軽い球', '勝ち運', '負け運', 'リリース○',
@@ -55,32 +48,52 @@ class PlayerPitchingAbilitySeeder extends Seeder
         $currentYear = 2024;
 
         foreach ($pitchers as $pitcher) {
-            $pitchControl = $faker->numberBetween(50, 95); // 制球力
-            $pitchStamina = $faker->numberBetween(50, 95); // スタミナ
-            $averageVelocity = $faker->randomFloat(1, 142.0, 160.0); // 平均球速
+            $pitchControl = $faker->numberBetween(50, 99); // 制球力
+            $pitchStamina = $faker->numberBetween(50, 99); // スタミナ
+            $averageVelocity = $faker->randomFloat(1, 130.0, 158.0); // 平均球速 (広めに設定)
 
-            // 変化球の種類とレベル (1〜5個、レベルは1〜7、ストレートは含まない)
-            $pitchTypeData = [];
-            // ランダムに1〜5個の変化球を選択
-            $numberOfPitchesToSelect = $faker->numberBetween(1, min(5, count($pitchTypes))); // 1〜5個、かつ実際の変化球の種類数を超えないように
-            $selectedPitchTypes = $faker->randomElements($pitchTypes, $numberOfPitchesToSelect);
+            $pitchTypeData = []; // この変数は使わないので削除可能ですが、ここでは残します
 
-            foreach ($selectedPitchTypes as $index => $pitchName) {
-                // pitch_type_1, pitch_type_2... に割り当てる
-                $pitchTypeData['pitch_type_' . ($index + 1)] = $pitchName . ':' . $faker->numberBetween(1, 7);
+            // ランダムに選択された球種にレベルを付与 (0〜7)
+            // 選択する球種の数は、全種類からランダムに1〜5個
+            $numberOfPitchesToSelect = $faker->numberBetween(1, min(count($allPitchTypes), 5)); 
+            $selectedPitchTypes = $faker->randomElements($allPitchTypes, $numberOfPitchesToSelect);
+
+            $assignedPitches = [];
+            foreach ($selectedPitchTypes as $pitchName) {
+                $assignedPitches[$pitchName] = $faker->numberBetween(0, 7);
             }
 
-            // 残りのpitch_type_カラムをnullで埋める (最大5種類)
-            for ($i = count($pitchTypeData); $i < 5; $i++) {
-                $pitchTypeData['pitch_type_' . ($i + 1)] = null;
+            // データベース保存用の最終的な pitchTypeData を構築
+            // すべての $allPitchTypes に対応するカラムを埋めるように修正
+            $finalPitchTypeData = [];
+            // $allPitchTypes の数だけループを回す
+            foreach ($allPitchTypes as $index => $pitchName) {
+                // pitch_type_1 から始まるカラム名を作成
+                $columnName = 'pitch_type_' . ($index + 1);
+                // データベースのテーブルにこのカラムが存在するかどうか確認
+                // (マイグレーションで pitch_type_7 まで定義されていることを前提とします)
+
+                // 割り当てられた球種であればそのレベル、なければ0をセット
+                $level = $assignedPitches[$pitchName] ?? 0;
+                $finalPitchTypeData[$columnName] = $pitchName . ':' . $level;
             }
 
-            $selectedSkills = $faker->randomElements($specialSkills, $faker->numberBetween(2, 5));
-            $skillsString = implode(', ', $selectedSkills);
+            // もしデータベースカラムが pitch_type_5 までしかない場合を考慮し、
+            // $finalPitchTypeData から余分なエントリを削除するか、
+            // マイグレーションを更新して pitch_type_7 まで追加してください。
+            // ここでは、マイグレーションが適切に更新されていると仮定します。
+            // 例: PlayerPitchingAbility モデルの $fillable に pitch_type_6, pitch_type_7 があるか、
+            // テーブルに pitch_type_6, pitch_type_7 カラムが存在するか。
 
-            $overallRank = round(($pitchControl + $pitchStamina + ($averageVelocity / 1.6)) / 3);
-            if ($overallRank > 100) $overallRank = 100;
-            if ($overallRank < 1) $overallRank = 1;
+            $selectedSkills = $faker->randomElements($specialSkills, $faker->numberBetween(1, 3));
+            $skillsString = implode(', ', array_unique($selectedSkills));
+            if (empty($skillsString)) {
+                $skillsString = null;
+            }
+
+            $overallRank = round(($pitchControl + $pitchStamina + (($averageVelocity - self::MIN_VELOCITY) / (self::MAX_VELOCITY - self::MIN_VELOCITY) * 100)) / 3);
+            $overallRank = max(1, min(99, $overallRank));
 
             PlayerPitchingAbility::create(array_merge([
                 'player_id'        => $pitcher->id,
@@ -90,7 +103,7 @@ class PlayerPitchingAbilitySeeder extends Seeder
                 'average_velocity' => $averageVelocity,
                 'overall_rank'     => $overallRank,
                 'special_skills'   => $skillsString,
-            ], $pitchTypeData)); // 変化球データも結合して保存
+            ], $finalPitchTypeData)); // 修正後の$finalPitchTypeDataを使用
         }
         $this->command->info('選手投球能力データの生成が完了しました。');
     }
