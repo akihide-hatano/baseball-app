@@ -16,7 +16,7 @@ class PlayerController extends Controller
         $teams = Team::all();
 
         // 選手をEager Loadingで取得
-        $query = Player::with('Team'); // currentTeamリレーションをEagerロード
+        $query = Player::with('team');
 
         // リクエストにteam_idが存在する場合、そのチームで選手を絞り込む
         if ($request->filled('team_id') && $request->team_id != '') {
@@ -52,13 +52,15 @@ class PlayerController extends Controller
      */
     public function show($id)
     {
-        // ★ここを追加: 手動でプレイヤーを取得して dd する★
+        // ID を使って Player モデルを検索
         $player = Player::find($id);
+
         // もし $player が取得できなかった場合（nullの場合）のハンドリング
         if (!$player) {
             abort(404, '選手が見つかりませんでした。');
         }
 
+        // ここから修正点です
         $player->load([
             'team', // チーム情報もロード
             'yearlyBattingStats' => function ($query) {
@@ -66,11 +68,34 @@ class PlayerController extends Controller
             },
             'yearlyPitchingStats' => function ($query) { // 投球成績もロード
                 $query->orderBy('year', 'desc'); // 最新の年を先に取得
+            },
+            // PlayerBattingAbility のリレーションをロード
+            'battingAbilities' => function ($query) {
+                $query->orderBy('year', 'desc'); // 最新のデータを取得するために年でソート
             }
         ]);
 
-        return view('players.show', compact('player'));
+        // 最新の打撃能力データを取得し、グラフ用に整形
+        $playerBattingAbilitiesData = null;
+        if ($player->battingAbilities->isNotEmpty()) {
+            $latestAbility = $player->battingAbilities->first(); // 最新の年度の能力を取得
+            $playerBattingAbilitiesData = [
+                'labels' => ['ミート', 'パワー', '走力', '守備力', '肩力', '反応'],
+                'data' => [
+                    $latestAbility->contact_power,
+                    $latestAbility->power,
+                    $latestAbility->speed,
+                    $latestAbility->fielding,
+                    $latestAbility->throwing,
+                    $latestAbility->reaction,
+                ]
+            ];
+        }
+
+        // ビューに 'playerBattingAbilitiesData' も渡す
+        return view('players.show', compact('player', 'playerBattingAbilitiesData'));
     }
+
     /**
      * Show the form for editing the specified resource.
      */
