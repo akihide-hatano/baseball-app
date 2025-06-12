@@ -8,6 +8,14 @@ use App\Models\Team;
 
 class PlayerController extends Controller
 {
+    // PlayerPitchingAbilitySeederで定義されている定数に合わせてここにも定義する
+    // これらはPlayerPitchingAbilitySeederが参照するためではなく、
+    // 必要に応じてController内で同様のスケール変換を行う場合の参考値です。
+    // 今回はpitchingAbilitiesのデータ整形では使わないため、削除するか、
+    // 関連する処理の場所に移動することも検討できますが、今回は変更しません。
+    // const MIN_VELOCITY = 100.0; // 仮の最小球速 (km/h)
+    // const MAX_VELOCITY = 160.0; // 仮の最大球速 (km/h)
+
     /**
      * Display a listing of the resource.
      */
@@ -60,7 +68,6 @@ class PlayerController extends Controller
             abort(404, '選手が見つかりませんでした。');
         }
 
-        // ここから修正点です
         $player->load([
             'team', // チーム情報もロード
             'yearlyBattingStats' => function ($query) {
@@ -72,6 +79,10 @@ class PlayerController extends Controller
             // PlayerBattingAbility のリレーションをロード
             'battingAbilities' => function ($query) {
                 $query->orderBy('year', 'desc'); // 最新のデータを取得するために年でソート
+            },
+            // PlayerPitchingAbility のリレーションをロード（以前の修正で追加済み）
+            'pitchingAbilities' => function ($query) {
+                $query->orderBy('year', 'desc');
             }
         ]);
 
@@ -91,7 +102,8 @@ class PlayerController extends Controller
                 ]
             ];
         }
-        // ★ここから投球能力データの整形ロジックを修正★
+
+        // 投球能力データの整形ロジックを修正
         $playerPitchingAbilitiesData = null;
         if ($player->pitchingAbilities->isNotEmpty()) {
             $latestPitchingAbility = $player->pitchingAbilities->first();
@@ -99,8 +111,15 @@ class PlayerController extends Controller
             $pitchLabels = [];
             $pitchData = [];
 
-            // 変化球の種類とレベルを抽出してグラフデータを作成
-            for ($i = 1; $i <= 5; $i++) {
+            // すべての変化球の種類を定義（シーダーと一致させる）
+            $allPitchTypes = [
+                'カーブ', 'スライダー', 'フォーク', 'チェンジアップ',
+                'シュート', 'カットボール', 'シンカー'
+            ];
+
+            // データベースのカラム pitch_type_1 から pitch_type_7 までをループ
+            // ここを修正: ループの条件を5から7に変更
+            for ($i = 1; $i <= count($allPitchTypes); $i++) { // allPitchTypesの数だけループ
                 $pitchTypeField = 'pitch_type_' . $i;
                 $pitchInfo = $latestPitchingAbility->$pitchTypeField; // 例: 'カーブ:4'
 
@@ -112,7 +131,17 @@ class PlayerController extends Controller
 
                         $pitchLabels[] = $pitchName;
                         $pitchData[] = $pitchLevel;
+                    } else {
+                        // データ形式が不正な場合は、球種名とレベル0をセット
+                        $pitchName = $allPitchTypes[$i - 1] ?? '不明'; // 該当する球種名を取得
+                        $pitchLabels[] = $pitchName;
+                        $pitchData[] = 0;
                     }
+                } else {
+                    // DBカラムがnullの場合、対応する球種名をラベルとし、レベルを0とする
+                    $pitchName = $allPitchTypes[$i - 1] ?? '不明'; // 該当する球種名を取得
+                    $pitchLabels[] = $pitchName;
+                    $pitchData[] = 0;
                 }
             }
 
@@ -124,8 +153,9 @@ class PlayerController extends Controller
                 ];
             }
         }
-        // ★ここまで投球能力データの整形ロジックを修正★
+        // ここまで投球能力データの整形ロジックを修正
 
+        // ビューにデータを渡す
         return view('players.show', compact('player', 'playerBattingAbilitiesData', 'playerPitchingAbilitiesData'));
     }
 
