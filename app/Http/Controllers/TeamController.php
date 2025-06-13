@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Team; // Teamモデルを忘れずにuseする
+use App\Models\Game;
 
 class TeamController extends Controller
 {
@@ -39,14 +40,38 @@ class TeamController extends Controller
      */
     public function show($id) // ★引数を$idに変更★
     {
-        $team = Team::find($id); // ★IDを使って手動で検索★
+        $team = Team::find($id);
 
+        // もし $team が取得できなかった場合（nullの場合）のハンドリング
         if (!$team) {
-            // チームが見つからなかった場合の処理 (例: 404エラーを返す)
-            abort(404, 'Team not found!');
+            abort(404, 'チームが見つかりませんでした。');
         }
 
-        return view('teams.show', compact('team'));
+        // チームに所属する選手、年度別成績、そして試合データをEagerロード
+        $team->load([
+            'players',
+            'yearlyTeamStats' => function ($query) {
+                $query->orderBy('year', 'desc'); // 最新の年を先に取得
+            },
+            'homeGames' => function ($query) {
+                $query->with(['homeTeam', 'awayTeam'])->orderBy('game_date', 'desc')->orderBy('game_time', 'desc');
+            },
+            'awayGames' => function ($query) {
+                $query->with(['homeTeam', 'awayTeam'])->orderBy('game_date', 'desc')->orderBy('game_time', 'desc');
+            }
+        ]);
+
+        // ホーム試合とアウェイ試合を結合し、日付と時刻でソートして直近10件を取得
+        $allTeamGames = $team->homeGames->merge($team->awayGames);
+        $recentGames = $allTeamGames->sortByDesc(function ($game) {
+            return $game->game_date . ' ' . $game->game_time; // 日付と時刻で複合ソート
+        })->take(10); // 直近10試合
+
+        // ★ここを追加: ddで$recentGamesの中身を確認★
+        dd($recentGames);
+
+        // ビューにデータを渡す
+        return view('teams.show', compact('team', 'recentGames'));
     }
 
     /**
