@@ -68,7 +68,7 @@ class TeamController extends Controller
         })->take(10); // 直近10試合
 
         // ★ここを追加: ddで$recentGamesの中身を確認★
-        dd($recentGames);
+        // dd($recentGames);
 
         // ビューにデータを渡す
         return view('teams.show', compact('team', 'recentGames'));

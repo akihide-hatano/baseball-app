@@ -63,6 +63,49 @@
             @endif
         </div>
 
+         <div class="bg-white shadow-xl rounded-lg p-8 mb-8">
+        <h2 class="text-2xl font-bold mb-4 text-indigo-700">直近の試合結果</h2>
+        @if($recentGames->isEmpty())
+            <p class="text-gray-600">このチームの試合データはありません。</p>
+        @else
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                    <thead class="bg-purple-100 text-purple-800">
+                        <tr>
+                            <th class="py-3 px-4 border-b text-left">日付</th>
+                            <th class="py-3 px-4 border-b text-left">時刻</th>
+                            <th class="py-3 px-4 border-b text-left">球場</th>
+                            <th class="py-3 px-4 border-b text-left">ホームチーム</th>
+                            <th class="py-3 px-4 border-b text-left">アウェイチーム</th>
+                            <th class="py-3 px-4 border-b text-left">スコア</th>
+                            <th class="py-3 px-4 border-b text-left">結果</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($recentGames as $game)
+                            <tr class="hover:bg-gray-50 {{ $loop->even ? 'bg-gray-50' : '' }}">
+                                <td class="py-3 px-4 border-b">{{ \Carbon\Carbon::parse($game->game_date)->format('Y年m月d日') }}</td>
+                                <td class="py-3 px-4 border-b">{{ \Carbon\Carbon::parse($game->game_time)->format('H:i') }}</td>
+                                <td class="py-3 px-4 border-b">{{ $game->stadium ?? '-' }}</td>
+                                <td class="py-3 px-4 border-b">{{ $game->homeTeam->team_name ?? '不明' }}</td>
+                                <td class="py-3 px-4 border-b">{{ $game->awayTeam->team_name ?? '不明' }}</td>
+                                <td class="py-3 px-4 border-b">
+                                    @if($game->home_score !== null && $game->away_score !== null)
+                                        {{ $game->home_score }} - {{ $game->away_score }}
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                                <td class="py-3 px-4 border-b">{{ $game->game_result ?? '-' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </div>
+
+
         {{-- 所属選手一覧セクション --}}
         <div class="bg-white shadow-xl rounded-lg p-8 mb-8">
             <h2 class="text-2xl font-bold mb-4 text-indigo-700">所属選手一覧</h2>
