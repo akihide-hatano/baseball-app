@@ -5,17 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Player;
 use App\Models\Team;
+use App\Models\PlayerBattingAbility; // PlayerBattingAbilityモデルの平均値取得のために使用
 
 class PlayerController extends Controller
 {
-    // PlayerPitchingAbilitySeederで定義されている定数に合わせてここにも定義する
-    // これらはPlayerPitchingAbilitySeederが参照するためではなく、
-    // 必要に応じてController内で同様のスケール変換を行う場合の参考値です。
-    // 今回はpitchingAbilitiesのデータ整形では使わないため、削除するか、
-    // 関連する処理の場所に移動することも検討できますが、今回は変更しません。
-    // const MIN_VELOCITY = 100.0; // 仮の最小球速 (km/h)
-    // const MAX_VELOCITY = 160.0; // 仮の最大球速 (km/h)
-
     /**
      * Display a listing of the resource.
      */
@@ -28,6 +21,7 @@ class PlayerController extends Controller
 
         // リクエストにteam_idが存在する場合、そのチームで選手を絞り込む
         if ($request->filled('team_id') && $request->team_id != '') {
+            // ★修正: $request->team_id を使用
             $query->where('team_id', $request->team_id);
         }
 
@@ -42,7 +36,6 @@ class PlayerController extends Controller
      */
     public function create()
     {
-        // ここに新規作成フォームを表示するロジックを記述
         return "選手作成フォーム";
     }
 
@@ -51,7 +44,6 @@ class PlayerController extends Controller
      */
     public function store(Request $request)
     {
-        // ここにフォームから送信されたデータを検証・保存するロジックを記述
         return "新しい選手を保存しました";
     }
 
@@ -69,59 +61,75 @@ class PlayerController extends Controller
         }
 
         $player->load([
-            'team', // チーム情報もロード
+            'team',
             'yearlyBattingStats' => function ($query) {
-                $query->orderBy('year', 'desc'); // 最新の年を先に取得
-            },
-            'yearlyPitchingStats' => function ($query) { // 投球成績もロード
-                $query->orderBy('year', 'desc'); // 最新の年を先に取得
-            },
-            // PlayerBattingAbility のリレーションをロード
-            'battingAbilities' => function ($query) {
-                $query->orderBy('year', 'desc'); // 最新のデータを取得するために年でソート
-            },
-            // PlayerPitchingAbility のリレーションをロード（以前の修正で追加済み）
-            'pitchingAbilities' => function ($query) {
                 $query->orderBy('year', 'desc');
+            },
+            'yearlyPitchingStats' => function ($query) {
+                $query->orderBy('year', 'desc');
+            },
+            // Playerモデルで定義されている battingAbilities と pitchingAbilities リレーションをロード
+            'battingAbilities' => function ($query) {
+                $query->orderBy('year', 'desc'); // 最新のデータを取得
+            },
+            'pitchingAbilities' => function ($query) {
+                $query->orderBy('year', 'desc'); // 最新のデータを取得
             }
         ]);
 
         // 最新の打撃能力データを取得し、グラフ用に整形
         $playerBattingAbilitiesData = null;
-        if ($player->battingAbilities->isNotEmpty()) {
-            $latestAbility = $player->battingAbilities->first(); // 最新の年度の能力を取得
+        $playerOverallRankData = null; // 総合ランク用データ
+
+        // battingAbilitiesリレーションから最新のPlayerBattingAbilityモデルを取得
+        $latestBattingAbility = $player->battingAbilities->first(); 
+        
+        if ($latestBattingAbility) {
+            // 純粋な打撃能力データ
             $playerBattingAbilitiesData = [
                 'labels' => ['ミート', 'パワー', '走力', '守備力', '肩力', '反応'],
                 'data' => [
-                    $latestAbility->contact_power,
-                    $latestAbility->power,
-                    $latestAbility->speed,
-                    $latestAbility->fielding,
-                    $latestAbility->throwing,
-                    $latestAbility->reaction,
+                    $latestBattingAbility->contact_power,
+                    $latestBattingAbility->power, // PlayerBattingAbilityモデルのpowerカラム
+                    $latestBattingAbility->speed,
+                    $latestBattingAbility->fielding,
+                    $latestBattingAbility->throwing,
+                    $latestBattingAbility->reaction,
+                ]
+            ];
+
+            // ★ここを修正：roleが「投手」以外の選手の総合能力ランク平均値を取得★
+            $averageNonPitcherOverallRank = PlayerBattingAbility::query()
+                ->join('players', 'player_batting_abilities.player_id', '=', 'players.id')
+                ->where('players.role', '!=', '投手') // roleが投手ではない選手を対象
+                ->avg('overall_rank');
+
+            // avg()は結果がなければnullを返すので、0をデフォルトとする
+            $averageNonPitcherOverallRank = $averageNonPitcherOverallRank ?? 0;
+
+            $playerOverallRankData = [
+                'labels' => ['あなたのランク', '投手以外の平均ランク'], // ラベルを修正
+                'data' => [
+                    $latestBattingAbility->overall_rank,
+                    round($averageNonPitcherOverallRank) // 平均値を四捨五入して表示
                 ]
             ];
         }
 
-        // 投球能力データの整形ロジックを修正
+        // 投球能力データの整形ロジック
         $playerPitchingAbilitiesData = null;
-        if ($player->pitchingAbilities->isNotEmpty()) {
-            $latestPitchingAbility = $player->pitchingAbilities->first();
+        // pitchingAbilitiesリレーションから最新のPlayerPitchingAbilityモデルを取得
+        $latestPitchingAbility = $player->pitchingAbilities->first();
 
+        if ($latestPitchingAbility) {
             $pitchLabels = [];
             $pitchData = [];
-
-            // すべての変化球の種類を定義（シーダーと一致させる）
-            $allPitchTypes = [
-                'カーブ', 'スライダー', 'フォーク', 'チェンジアップ',
-                'シュート', 'カットボール', 'シンカー'
-            ];
-
-            // データベースのカラム pitch_type_1 から pitch_type_7 までをループ
-            // ここを修正: ループの条件を5から7に変更
-            for ($i = 1; $i <= count($allPitchTypes); $i++) { // allPitchTypesの数だけループ
+            
+            // PlayerPitchingAbilityモデルのカラム名とデータ形式に合わせて調整
+            // 例: pitch_type_1 から pitch_type_7 まで
+            for ($i = 1; $i <= 7; $i++) {
                 $pitchTypeField = 'pitch_type_' . $i;
-                $pitchInfo = $latestPitchingAbility->$pitchTypeField; // 例: 'カーブ:4'
+                $pitchInfo = $latestPitchingAbility->$pitchTypeField;
 
                 if ($pitchInfo) {
                     $parts = explode(':', $pitchInfo);
@@ -129,23 +137,14 @@ class PlayerController extends Controller
                         $pitchName = trim($parts[0]);
                         $pitchLevel = (int)trim($parts[1]);
 
-                        $pitchLabels[] = $pitchName;
-                        $pitchData[] = $pitchLevel;
-                    } else {
-                        // データ形式が不正な場合は、球種名とレベル0をセット
-                        $pitchName = $allPitchTypes[$i - 1] ?? '不明'; // 該当する球種名を取得
-                        $pitchLabels[] = $pitchName;
-                        $pitchData[] = 0;
+                        if (!empty($pitchName) && $pitchLevel >= 0) {
+                            $pitchLabels[] = $pitchName;
+                            $pitchData[] = $pitchLevel;
+                        }
                     }
-                } else {
-                    // DBカラムがnullの場合、対応する球種名をラベルとし、レベルを0とする
-                    $pitchName = $allPitchTypes[$i - 1] ?? '不明'; // 該当する球種名を取得
-                    $pitchLabels[] = $pitchName;
-                    $pitchData[] = 0;
                 }
             }
 
-            // 変化球データが存在する場合のみ、データを設定
             if (!empty($pitchLabels)) {
                 $playerPitchingAbilitiesData = [
                     'labels' => $pitchLabels,
@@ -153,10 +152,9 @@ class PlayerController extends Controller
                 ];
             }
         }
-        // ここまで投球能力データの整形ロジックを修正
-
+        
         // ビューにデータを渡す
-        return view('players.show', compact('player', 'playerBattingAbilitiesData', 'playerPitchingAbilitiesData'));
+        return view('players.show', compact('player', 'playerBattingAbilitiesData', 'playerPitchingAbilitiesData', 'playerOverallRankData'));
     }
 
     /**
@@ -164,7 +162,6 @@ class PlayerController extends Controller
      */
     public function edit(Player $player)
     {
-        // ここに編集フォームを表示するロジックを記述
         return "選手編集フォーム (ID: {$player->id})";
     }
 
@@ -173,7 +170,6 @@ class PlayerController extends Controller
      */
     public function update(Request $request, Player $player)
     {
-        // ここにフォームから送信されたデータで選手を更新するロジックを記述
         return "選手 (ID: {$player->id}) を更新しました";
     }
 
@@ -182,7 +178,7 @@ class PlayerController extends Controller
      */
     public function destroy(Player $player)
     {
-        $player->delete(); // 選手を削除
+        $player->delete();
         return redirect()->route('players.index')->with('success', '選手が削除されました！');
     }
 }

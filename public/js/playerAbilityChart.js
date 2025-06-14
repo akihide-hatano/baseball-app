@@ -1,130 +1,175 @@
-// public/js/playerChart.js
-
-document.addEventListener('DOMContentLoaded', function() {
-
-    // --- 打撃能力チャートの描画 ---
-    const battingChartCanvas = document.getElementById('battingAbilityChart');
-
-    if (battingChartCanvas && battingChartCanvas.dataset.battingAbilities) {
-        try {
-            const playerBattingAbilitiesData = JSON.parse(battingChartCanvas.dataset.battingAbilities);
-
-            if (playerBattingAbilitiesData && playerBattingAbilitiesData.labels && playerBattingAbilitiesData.data) {
-                const ctx = battingChartCanvas.getContext('2d');
-                new Chart(ctx, {
-                    type: 'radar',
-                    data: {
-                        labels: playerBattingAbilitiesData.labels,
-                        datasets: [{
-                            label: '能力値',
-                            data: playerBattingAbilitiesData.data,
-                            backgroundColor: 'rgba(75, 192, 192, 0.4)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 2,
-                            pointBackgroundColor: 'rgba(75, 192, 192, 1)',
-                            pointBorderColor: '#fff',
-                            pointHoverBackgroundColor: '#fff',
-                            pointHoverBorderColor: 'rgba(75, 192, 192, 1)'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            title: {
-                                display: true,
-                                text: '選手打撃能力',
-                                font: {
-                                    size: 20
-                                }
-                            },
-                            legend: {
-                                display: false
-                            }
+document.addEventListener('DOMContentLoaded', function () {
+    // 既存の打撃能力チャート (レーダーチャート)
+    const battingAbilityChartCanvas = document.getElementById('battingAbilityChart');
+    if (battingAbilityChartCanvas) {
+        const battingAbilitiesData = JSON.parse(battingAbilityChartCanvas.dataset.battingAbilities);
+        new Chart(battingAbilityChartCanvas, {
+            type: 'radar',
+            data: {
+                labels: battingAbilitiesData.labels,
+                datasets: [{
+                    label: '能力値',
+                    data: battingAbilitiesData.data,
+                    backgroundColor: 'rgba(75, 192, 192, 0.4)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+                    pointBorderColor: 'rgba(75, 192, 192, 1)',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(75, 192, 192, 1)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: {
+                            display: false
                         },
-                        scales: {
-                            r: {
-                                angleLines: { color: '#eee' },
-                                grid: { color: '#ccc' },
-                                pointLabels: { font: { size: 14 }, color: '#333' },
-                                suggestedMin: 0,
-                                suggestedMax: 100, // 打撃能力の想定最大値
-                                ticks: { stepSize: 20, display: false },
-                                backgroundColor: 'white'
-                            }
+                        suggestedMin: 0,
+                        suggestedMax: 100, // 能力値の最大値を適切に設定
+                        ticks: {
+                            beginAtZero: true,
+                            stepSize: 20,
+                            color: '#4a5568'
+                        },
+                        grid: {
+                            color: 'rgba(150, 150, 150, 0.7)',
+                            lineWidth: 1
                         }
                     }
-                });
-            } else {
-                console.warn('グラフ描画に必要な打撃データが不足しています。', playerBattingAbilitiesData);
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: '打撃能力',
+                        font: {
+                            size: 18
+                        }
+                    }
+                }
             }
-        } catch (e) {
-            console.error('打撃能力データのパースに失敗しました:', e);
-        }
-    } else {
-        console.warn('battingAbilityChart canvas または data-batting-abilities 属性が見つかりません。');
+        });
     }
 
-    // --- 投球能力（変化球）チャートの描画 ---
-    const pitchingChartCanvas = document.getElementById('pitchingAbilityChart');
-
-    if (pitchingChartCanvas && pitchingChartCanvas.dataset.pitchingAbilities) {
-        try {
-            const playerPitchingAbilitiesData = JSON.parse(pitchingChartCanvas.dataset.pitchingAbilities);
-
-            if (playerPitchingAbilitiesData && playerPitchingAbilitiesData.labels && playerPitchingAbilitiesData.data) {
-                const ctx = pitchingChartCanvas.getContext('2d');
-                new Chart(ctx, {
-                    type: 'radar',
-                    data: {
-                        labels: playerPitchingAbilitiesData.labels,
-                        datasets: [{
-                            label: '変化球レベル',
-                            data: playerPitchingAbilitiesData.data,
-                            backgroundColor: 'rgba(255, 99, 132, 0.4)',
-                            borderColor: 'rgba(255, 99, 132, 1)',
-                            borderWidth: 2,
-                            pointBackgroundColor: 'rgba(255, 99, 132, 1)',
-                            pointBorderColor: '#fff',
-                            pointHoverBackgroundColor: '#fff',
-                            pointHoverBorderColor: 'rgba(255, 99, 132, 1)'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            title: {
-                                display: true,
-                                text: '選手変化球能力',
-                                font: {
-                                    size: 20
-                                }
-                            },
-                            legend: {
-                                display: false
-                            }
+    // 新しい総合ランクチャート (棒グラフ)
+    const overallRankChartCanvas = document.getElementById('overallRankChart');
+    if (overallRankChartCanvas) {
+        const overallRankData = JSON.parse(overallRankChartCanvas.dataset.overallRank);
+        new Chart(overallRankChartCanvas, {
+            type: 'bar',
+            data: {
+                labels: overallRankData.labels,
+                datasets: [{
+                    label: '総合ランク',
+                    data: overallRankData.data,
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.8)',
+                        'rgba(255, 159, 64, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            stepSize: 20
                         },
-                        scales: {
-                            r: {
-                                angleLines: { color: '#eee' },
-                                grid: { color: '#ccc' },
-                                pointLabels: { font: { size: 14 }, color: '#333' },
-                                suggestedMin: 0,
-                                suggestedMax: 7, // 変化球レベルの最大値に合わせて調整（例: 7段階）
-                                ticks: { stepSize: 1, display: false },
-                                backgroundColor: 'white'
-                            }
+                        grid: {
+                            color: 'rgba(150, 150, 150, 0.7)',
+                            lineWidth: 1
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(150, 150, 150, 0.7)',
+                            lineWidth: 1
                         }
                     }
-                });
-            } else {
-                console.warn('グラフ描画に必要な変化球データが不足しています。', playerPitchingAbilitiesData);
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: '総合能力ランク',
+                        font: {
+                            size: 18
+                        }
+                    }
+                }
             }
-        } catch (e) {
-            console.error('変化球データのパースに失敗しました:', e);
-        }
-    } else {
-        console.warn('pitchingAbilityChart canvas または data-pitching-abilities 属性が見つかりません。');
+        });
+    }
+
+    // 既存の投球能力チャート (レーダーチャート)
+    const pitchingAbilityChartCanvas = document.getElementById('pitchingAbilityChart');
+    if (pitchingAbilityChartCanvas) {
+        const pitchingAbilitiesData = JSON.parse(pitchingAbilityChartCanvas.dataset.pitchingAbilities);
+        new Chart(pitchingAbilityChartCanvas, {
+            type: 'radar',
+            data: {
+                labels: pitchingAbilitiesData.labels, // そのままラベルを使用
+                datasets: [{
+                    label: '変化球レベル',
+                    data: pitchingAbilitiesData.data, // ★ここを修正：.data を1つ削除★
+                    backgroundColor: 'rgba(153, 102, 255, 0.4)',
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgba(153, 102, 255, 1)',
+                    pointBorderColor: 'rgba(153, 102, 255, 1)',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(153, 102, 255, 1)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: {
+                            display: false
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 7, // 変化球レベルの最大値を適切に設定
+                        ticks: {
+                            beginAtZero: true,
+                            stepSize: 1,
+                            color: '#4a5568'
+                        },
+                        grid: {
+                            color: 'rgba(150, 150, 150, 0.7)',
+                            lineWidth: 1
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: '選手変化球能力',
+                        font: {
+                            size: 18
+                        }
+                    }
+                }
+            }
+        });
     }
 });

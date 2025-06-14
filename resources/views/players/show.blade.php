@@ -24,6 +24,55 @@
             </div>
         </div>
 
+        {{-- 打撃能力チャートと総合ランクチャートのFlexコンテナ --}}
+        <div class="flex flex-col md:flex-row gap-8 mb-8">
+            {{-- 選手打撃能力チャート (PlayerBattingAbility) --}}
+            <div class="bg-white shadow-xl rounded-lg p-8 flex-1">
+                <h2 class="text-2xl font-bold mb-4 text-indigo-700">選手打撃能力チャート</h2>
+                @if(empty($playerBattingAbilitiesData))
+                    <p class="text-gray-600">この選手の打撃能力データはありません。</p>
+                @else
+                    <div class="flex justify-center items-center">
+                        {{-- data-batting-abilities 属性でデータを埋め込みます --}}
+                        <canvas id="battingAbilityChart" class="w-full max-w-lg h-96" data-batting-abilities="{{ json_encode($playerBattingAbilitiesData) }}"></canvas>
+                    </div>
+                @endif
+            </div>
+
+            {{-- 総合ランクチャート (新しいセクション - レイアウト変更によりFlexアイテムに) --}}
+            <div class="bg-white shadow-xl rounded-lg p-8 flex-1">
+                <h2 class="text-2xl font-bold mb-4 text-indigo-700">総合能力ランク (平均との比較)</h2>
+                @if(empty($playerOverallRankData))
+                    <p class="text-gray-600">この選手の総合能力ランクデータはありません。</p>
+                @else
+                    <div class="flex justify-center items-center">
+                        <canvas id="overallRankChart" class="w-full max-w-lg h-96" data-overall-rank="{{ json_encode($playerOverallRankData) }}"></canvas>
+                    </div>
+                    {{-- 総合ランクのSランク表示を追加 --}}
+                    @if (isset($playerOverallRankData['data'][0]))
+                        @php
+                            $rankValue = $playerOverallRankData['data'][0];
+                            $rankText = '';
+                            if ($rankValue >= 90) {
+                                $rankText = 'Sランク';
+                            } elseif ($rankValue >= 80) {
+                                $rankText = 'Aランク';
+                            } elseif ($rankValue >= 70) {
+                                $rankText = 'Bランク';
+                            } elseif ($rankValue >= 60) {
+                                $rankText = 'Cランク';
+                            } else {
+                                $rankText = 'Dランク';
+                            }
+                        @endphp
+                        <p class="text-center text-3xl font-bold text-red-600 mt-4">
+                            {{ $player->name }}の総合ランク: {{ $rankText }} ({{ $rankValue }})
+                        </p>
+                    @endif
+                @endif
+            </div>
+        </div>
+
         {{-- 年度別打撃成績 --}}
         <div class="bg-white shadow-xl rounded-lg p-8 mb-8">
             <h2 class="text-2xl font-bold mb-4 text-indigo-700">年度別打撃成績</h2>
@@ -70,7 +119,7 @@
                                     <td class="py-3 px-4 border-b">{{ number_format($stat->batting_average, 3) }}</td>
                                     <td class="py-3 px-4 border-b">{{ number_format($stat->on_base_percentage, 3) }}</td>
                                     <td class="py-3 px-4 border-b">{{ number_format($stat->slugging_percentage, 3) }}</td>
-                                    <td class="py-3 px-4 border-b">{{ number_format($stat->ops, 3) }}</td>
+                                <td class="py-3 px-4 border-b">{{ number_format($stat->ops, 3) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -132,19 +181,6 @@
             @endif
         </div>
 
-        {{-- 選手打撃能力チャート (PlayerBattingAbility) --}}
-        <div class="bg-white shadow-xl rounded-lg p-8 mb-8">
-            <h2 class="text-2xl font-bold mb-4 text-indigo-700">選手打撃能力チャート</h2>
-            @if(empty($playerBattingAbilitiesData))
-                <p class="text-gray-600">この選手の打撃能力データはありません。</p>
-            @else
-                <div class="flex justify-center items-center">
-                    {{-- data-batting-abilities 属性でデータを埋め込みます --}}
-                    <canvas id="battingAbilityChart" class="w-full max-w-lg h-96" data-batting-abilities="{{ json_encode($playerBattingAbilitiesData) }}"></canvas>
-                </div>
-            @endif
-        </div>
-
         {{-- 選手変化球チャート (PlayerPitchingAbility - Pitch Types) --}}
         <div class="bg-white shadow-xl rounded-lg p-8 mb-8">
             <h2 class="text-2xl font-bold mb-4 text-indigo-700">選手変化球チャート</h2>
@@ -175,5 +211,5 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="{{ asset('js/playerAbilityChart.js') }}"></script> {{-- ★ここだけに変更★ --}}
+    <script src="{{ asset('js/playerAbilityChart.js') }}"></script>
 </x-app-layout>
