@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Player;
 use App\Models\Team;
-use App\Models\PlayerBattingAbility; // PlayerBattingAbilityモデルの平均値取得のために使用
+use App\Models\PlayerBattingAbility;
+use App\Models\PlayerPitchingAbility;
 
 class PlayerController extends Controller
 {
@@ -21,7 +22,6 @@ class PlayerController extends Controller
 
         // リクエストにteam_idが存在する場合、そのチームで選手を絞り込む
         if ($request->filled('team_id') && $request->team_id != '') {
-            // ★修正: $request->team_id を使用
             $query->where('team_id', $request->team_id);
         }
 
@@ -68,29 +68,25 @@ class PlayerController extends Controller
             'yearlyPitchingStats' => function ($query) {
                 $query->orderBy('year', 'desc');
             },
-            // Playerモデルで定義されている battingAbilities と pitchingAbilities リレーションをロード
             'battingAbilities' => function ($query) {
-                $query->orderBy('year', 'desc'); // 最新のデータを取得
+                $query->orderBy('year', 'desc');
             },
             'pitchingAbilities' => function ($query) {
-                $query->orderBy('year', 'desc'); // 最新のデータを取得
+                $query->orderBy('year', 'desc');
             }
         ]);
 
         // 最新の打撃能力データを取得し、グラフ用に整形
         $playerBattingAbilitiesData = null;
-        $playerOverallRankData = null; // 総合ランク用データ
+        $playerOverallRankData = null;
 
-        // battingAbilitiesリレーションから最新のPlayerBattingAbilityモデルを取得
-        $latestBattingAbility = $player->battingAbilities->first(); 
-        
+        $latestBattingAbility = $player->battingAbilities->first();
         if ($latestBattingAbility) {
-            // 純粋な打撃能力データ
             $playerBattingAbilitiesData = [
                 'labels' => ['ミート', 'パワー', '走力', '守備力', '肩力', '反応'],
                 'data' => [
                     $latestBattingAbility->contact_power,
-                    $latestBattingAbility->power, // PlayerBattingAbilityモデルのpowerカラム
+                    $latestBattingAbility->power,
                     $latestBattingAbility->speed,
                     $latestBattingAbility->fielding,
                     $latestBattingAbility->throwing,
@@ -98,35 +94,36 @@ class PlayerController extends Controller
                 ]
             ];
 
-            // ★ここを修正：roleが「投手」以外の選手の総合能力ランク平均値を取得★
+            // 投手以外の総合能力ランク平均値を取得
             $averageNonPitcherOverallRank = PlayerBattingAbility::query()
                 ->join('players', 'player_batting_abilities.player_id', '=', 'players.id')
-                ->where('players.role', '!=', '投手') // roleが投手ではない選手を対象
+                ->where('players.role', '!=', '投手')
                 ->avg('overall_rank');
 
-            // avg()は結果がなければnullを返すので、0をデフォルトとする
             $averageNonPitcherOverallRank = $averageNonPitcherOverallRank ?? 0;
 
             $playerOverallRankData = [
-                'labels' => ['あなたのランク', '投手以外の平均ランク'], // ラベルを修正
+                'labels' => ['あなたのランク', '投手以外の平均ランク'],
                 'data' => [
                     $latestBattingAbility->overall_rank,
-                    round($averageNonPitcherOverallRank) // 平均値を四捨五入して表示
+                    round($averageNonPitcherOverallRank)
                 ]
             ];
         }
 
-        // 投球能力データの整形ロジック
-        $playerPitchingAbilitiesData = null;
-        // pitchingAbilitiesリレーションから最新のPlayerPitchingAbilityモデルを取得
+        // 投球能力データの整形ロジックを修正・分割
+        $playerPitchingAbilitiesData = null; // 変化球用
+        $playerPitchingFundamentalAbilitiesData = null; // スタミナ・コントロール用
+        $playerPitchingVelocityData = null; // 球速用
+        $playerPitchingOverallRankData = null;
+
         $latestPitchingAbility = $player->pitchingAbilities->first();
 
         if ($latestPitchingAbility) {
+            // 変化球データ
             $pitchLabels = [];
             $pitchData = [];
-            
-            // PlayerPitchingAbilityモデルのカラム名とデータ形式に合わせて調整
-            // 例: pitch_type_1 から pitch_type_7 まで
+
             for ($i = 1; $i <= 7; $i++) {
                 $pitchTypeField = 'pitch_type_' . $i;
                 $pitchInfo = $latestPitchingAbility->$pitchTypeField;
@@ -145,16 +142,50 @@ class PlayerController extends Controller
                 }
             }
 
+            // 変化球データが1つ以上あればセット
             if (!empty($pitchLabels)) {
                 $playerPitchingAbilitiesData = [
                     'labels' => $pitchLabels,
                     'data' => $pitchData,
                 ];
             }
+
+            // スタミナ・コントロールのデータ
+            $playerPitchingFundamentalAbilitiesData = [
+                'labels' => ['スタミナ', 'コントロール'],
+                'data' => [
+                    $latestPitchingAbility->pitch_stamina,
+                    $latestPitchingAbility->pitch_control
+                ],
+            ];
+
+            // 球速データ
+            $playerPitchingVelocityData = [
+                'labels' => ['球速'],
+                'data' => [$latestPitchingAbility->average_velocity],
+            ];
+
+
+            // 投手の総合ランクデータと平均値
+            // PlayerPitchingAbilityにもoverall_rankカラムがあると仮定
+            $pitchingOverallRank = $latestPitchingAbility->overall_rank ?? 75; 
+
+            $averagePitcherOverallRank = PlayerPitchingAbility::query()
+                ->join('players', 'player_pitching_abilities.player_id', '=', 'players.id')
+                ->where('players.role', '=', '投手')
+                ->avg('overall_rank');
+
+            $averagePitcherOverallRank = $averagePitcherOverallRank ?? 0;
+
+            $playerPitchingOverallRankData = [
+                'labels' => ['あなたのランク', '投手の平均ランク'],
+                'data' => [
+                    $pitchingOverallRank,
+                    round($averagePitcherOverallRank)
+                ]
+            ];
         }
-        
-        // ビューにデータを渡す
-        return view('players.show', compact('player', 'playerBattingAbilitiesData', 'playerPitchingAbilitiesData', 'playerOverallRankData'));
+        return view('players.show', compact('player', 'playerBattingAbilitiesData', 'playerPitchingAbilitiesData', 'playerPitchingFundamentalAbilitiesData', 'playerPitchingVelocityData', 'playerOverallRankData', 'playerPitchingOverallRankData'));
     }
 
     /**

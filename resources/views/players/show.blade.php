@@ -39,16 +39,15 @@
                 @endif
             </div>
 
-            {{-- 総合ランクチャート (新しいセクション - レイアウト変更によりFlexアイテムに) --}}
+            {{-- 総合ランクチャート (レイアウト変更によりFlexアイテムに) --}}
             <div class="bg-white shadow-xl rounded-lg p-8 flex-1">
-                <h2 class="text-2xl font-bold mb-4 text-indigo-700">総合能力ランク (平均との比較)</h2>
+                <h2 class="text-2xl font-bold mb-4 text-indigo-700">野手総合能力ランク (平均との比較)</h2>
                 @if(empty($playerOverallRankData))
-                    <p class="text-gray-600">この選手の総合能力ランクデータはありません。</p>
+                    <p class="text-gray-600">この選手の野手総合能力ランクデータはありません。</p>
                 @else
                     <div class="flex justify-center items-center">
                         <canvas id="overallRankChart" class="w-full max-w-lg h-96" data-overall-rank="{{ json_encode($playerOverallRankData) }}"></canvas>
                     </div>
-                    {{-- 総合ランクのSランク表示を追加 --}}
                     @if (isset($playerOverallRankData['data'][0]))
                         @php
                             $rankValue = $playerOverallRankData['data'][0];
@@ -66,12 +65,92 @@
                             }
                         @endphp
                         <p class="text-center text-3xl font-bold text-red-600 mt-4">
-                            {{ $player->name }}の総合ランク: {{ $rankText }} ({{ $rankValue }})
+                            {{ $player->name }}の野手総合ランク: {{ $rankText }} ({{ $rankValue }})
                         </p>
                     @endif
                 @endif
             </div>
         </div>
+
+        {{-- 投手能力チャート群のFlexコンテナ (新しいセクション) --}}
+        <div class="flex flex-col md:flex-row gap-8 mb-8">
+            {{-- 選手変化球チャート --}}
+            <div class="bg-white shadow-xl rounded-lg p-8 flex-1">
+                <h2 class="text-2xl font-bold mb-4 text-indigo-700">投手変化球チャート</h2>
+                @if(empty($playerPitchingAbilitiesData))
+                    <p class="text-gray-600">この選手の投手変化球データはありません。</p>
+                @else
+                    <div class="flex justify-center items-center">
+                        <canvas id="pitchingAbilityChart" class="w-full max-w-lg h-96" data-pitching-abilities="{{ json_encode($playerPitchingAbilitiesData) }}"></canvas>
+                    </div>
+                @endif
+            </div>
+
+            {{-- 選手基本投球能力チャート (スタミナ, コントロール) --}}
+            <div class="bg-white shadow-xl rounded-lg p-8 flex-1">
+                <h2 class="text-2xl font-bold mb-4 text-indigo-700">投手基本能力 (スタミナ, コントロール)</h2>
+                @if(empty($playerPitchingFundamentalAbilitiesData))
+                    <p class="text-gray-600">この選手の投手基本能力データはありません。</p>
+                @else
+                    <div class="flex justify-center items-center">
+                        <canvas id="pitchingFundamentalAbilityChart" class="w-full max-w-lg h-96" data-pitching-fundamental-abilities="{{ json_encode($playerPitchingFundamentalAbilitiesData) }}"></canvas>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        {{-- 球速と投手総合ランクチャート (単独のセクション) --}}
+        <div class="flex flex-col md:flex-row gap-8 mb-8">
+            {{-- 球速チャート --}}
+            <div class="bg-white shadow-xl rounded-lg p-8 flex-1">
+                <h2 class="text-2xl font-bold mb-4 text-indigo-700">球速</h2>
+                @if(empty($playerPitchingVelocityData))
+                    <p class="text-gray-600">この選手の球速データはありません。</p>
+                @else
+                    <div class="flex justify-center items-center">
+                        <canvas id="pitchingVelocityChart" class="w-full max-w-lg h-96" data-pitching-velocity="{{ json_encode($playerPitchingVelocityData) }}"></canvas>
+                    </div>
+                     @if (isset($playerPitchingVelocityData['data'][0]))
+                        <p class="text-center text-3xl font-bold text-blue-600 mt-4">
+                            {{ $player->name }}の球速: {{ $playerPitchingVelocityData['data'][0] }} km/h
+                        </p>
+                    @endif
+                @endif
+            </div>
+
+            {{-- 投手総合ランクチャート --}}
+            <div class="bg-white shadow-xl rounded-lg p-8 flex-1">
+                <h2 class="text-2xl font-bold mb-4 text-indigo-700">投手総合能力ランク (平均との比較)</h2>
+                @if(empty($playerPitchingOverallRankData))
+                    <p class="text-gray-600">この選手の投手総合能力ランクデータはありません。</p>
+                @else
+                    <div class="flex justify-center items-center">
+                        <canvas id="pitchingOverallRankChart" class="w-full max-w-lg h-96" data-pitching-overall-rank="{{ json_encode($playerPitchingOverallRankData) }}"></canvas>
+                    </div>
+                    @if (isset($playerPitchingOverallRankData['data'][0]))
+                        @php
+                            $rankValue = $playerPitchingOverallRankData['data'][0];
+                            $rankText = '';
+                            if ($rankValue >= 90) {
+                                $rankText = 'Sランク';
+                            } elseif ($rankValue >= 80) {
+                                $rankText = 'Aランク';
+                            } elseif ($rankValue >= 70) {
+                                $rankText = 'Bランク';
+                            } elseif ($rankValue >= 60) {
+                                $rankText = 'Cランク';
+                            } else {
+                                $rankText = 'Dランク';
+                            }
+                        @endphp
+                        <p class="text-center text-3xl font-bold text-red-600 mt-4">
+                            {{ $player->name }}の投手総合ランク: {{ $rankText }} ({{ $rankValue }})
+                        </p>
+                    @endif
+                @endif
+            </div>
+        </div>
+
 
         {{-- 年度別打撃成績 --}}
         <div class="bg-white shadow-xl rounded-lg p-8 mb-8">
@@ -177,19 +256,6 @@
                             @endforeach
                         </tbody>
                     </table>
-                </div>
-            @endif
-        </div>
-
-        {{-- 選手変化球チャート (PlayerPitchingAbility - Pitch Types) --}}
-        <div class="bg-white shadow-xl rounded-lg p-8 mb-8">
-            <h2 class="text-2xl font-bold mb-4 text-indigo-700">選手変化球チャート</h2>
-            @if(empty($playerPitchingAbilitiesData))
-                <p class="text-gray-600">この選手の変化球データはありません。</p>
-            @else
-                <div class="flex justify-center items-center">
-                    {{-- data-pitching-abilities 属性でデータを埋め込みます --}}
-                    <canvas id="pitchingAbilityChart" class="w-full max-w-lg h-96" data-pitching-abilities="{{ json_encode($playerPitchingAbilitiesData) }}"></canvas>
                 </div>
             @endif
         </div>
