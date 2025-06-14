@@ -287,7 +287,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 indexAxis: 'y', // 棒を横向きにする
                 scales: {
                     x: {
-                        beginAtZero: true,
+                        // ★ここを変更★
+                        beginAtZero: false, // 0から開始しない
+                        min: 100,           // 最小値を100に設定
                         max: finalMaxVelocity,
                         ticks: {
                             stepSize: 20
@@ -338,8 +340,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // ★旧「球速チャート (単体)」の削除★
-    // pitchingVelocityChartCanvas のブロックは削除されました。
 
     // 投手総合ランクチャート (棒グラフ) - ロジックは変更なし
     const pitchingOverallRankChartCanvas = document.getElementById('pitchingOverallRankChart');
