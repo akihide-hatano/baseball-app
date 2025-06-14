@@ -86,7 +86,7 @@
                 @endif
             </div>
 
-            {{-- 選手基本投球能力チャート (スタミナ, コントロール) --}}
+            {{-- 選手基本投球能力チャート (スタミナ, コントロール) を棒グラフで --}}
             <div class="bg-white shadow-xl rounded-lg p-8 flex-1">
                 <h2 class="text-2xl font-bold mb-4 text-indigo-700">投手基本能力 (スタミナ, コントロール)</h2>
                 @if(empty($playerPitchingFundamentalAbilitiesData))
@@ -99,20 +99,20 @@
             </div>
         </div>
 
-        {{-- 球速と投手総合ランクチャート (単独のセクション) --}}
+        {{-- 球速と投手総合ランクチャートのFlexコンテナ --}}
         <div class="flex flex-col md:flex-row gap-8 mb-8">
-            {{-- 球速チャート --}}
+            {{-- ★球速比較チャート (新しいセクション)★ --}}
             <div class="bg-white shadow-xl rounded-lg p-8 flex-1">
-                <h2 class="text-2xl font-bold mb-4 text-indigo-700">球速</h2>
-                @if(empty($playerPitchingVelocityData))
-                    <p class="text-gray-600">この選手の球速データはありません。</p>
+                <h2 class="text-2xl font-bold mb-4 text-indigo-700">球速 (チーム・全体との比較)</h2>
+                @if(empty($playerPitchingVelocityComparisonData))
+                    <p class="text-gray-600">この選手の球速比較データはありません。</p>
                 @else
                     <div class="flex justify-center items-center">
-                        <canvas id="pitchingVelocityChart" class="w-full max-w-lg h-96" data-pitching-velocity="{{ json_encode($playerPitchingVelocityData) }}"></canvas>
+                        <canvas id="pitchingVelocityComparisonChart" class="w-full max-w-lg h-96" data-pitching-velocity-comparison="{{ json_encode($playerPitchingVelocityComparisonData) }}"></canvas>
                     </div>
-                     @if (isset($playerPitchingVelocityData['data'][0]))
+                    @if (isset($playerPitchingVelocityComparisonData['data'][0]))
                         <p class="text-center text-3xl font-bold text-blue-600 mt-4">
-                            {{ $player->name }}の球速: {{ $playerPitchingVelocityData['data'][0] }} km/h
+                            {{ $player->name }}の球速: {{ $playerPitchingVelocityComparisonData['data'][0] }} km/h
                         </p>
                     @endif
                 @endif
@@ -150,6 +150,10 @@
                 @endif
             </div>
         </div>
+
+        {{-- ★旧「球速」セクションを削除、またはこのコメントのように残す★ --}}
+        {{-- 以前の球速単体表示のセクションは削除しました。比較グラフが代わりに表示されます。 --}}
+        {{-- 必要であれば、ここに旧コードをコメントアウトして残しておくことも可能です --}}
 
 
         {{-- 年度別打撃成績 --}}

@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 投手能力チャート (変化球) - レーダーチャート
+    // 投手能力チャート (変化球)
     const pitchingAbilityChartCanvas = document.getElementById('pitchingAbilityChart');
     if (pitchingAbilityChartCanvas) {
         const pitchingAbilitiesData = JSON.parse(pitchingAbilityChartCanvas.dataset.pitchingAbilities);
@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const finalMaxPitchingAbility = Math.max(suggestedMaxPitchingAbility, 8);
 
         new Chart(pitchingAbilityChartCanvas, {
-            type: 'radar', // ★レーダーチャートのまま★
+            type: 'radar',
             data: {
                 labels: pitchingAbilitiesData.labels,
                 datasets: [{
@@ -178,23 +178,24 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 投手基本能力チャート (スタミナ, コントロール) - ★棒グラフに変更済み★
+    // 投手基本能力チャート (スタミナ, コントロール) を棒グラフに変更
     const pitchingFundamentalAbilityChartCanvas = document.getElementById('pitchingFundamentalAbilityChart');
     if (pitchingFundamentalAbilityChartCanvas) {
         const pitchingFundamentalAbilitiesData = JSON.parse(pitchingFundamentalAbilityChartCanvas.dataset.pitchingFundamentalAbilities);
 
+        // スタミナとコントロールの最大値は100
         const maxFundamentalValue = Math.max(...pitchingFundamentalAbilitiesData.data);
         const suggestedMaxFundamental = Math.ceil(maxFundamentalValue / 20) * 20;
-        const finalMaxFundamental = Math.max(suggestedMaxFundamental, 100);
+        const finalMaxFundamental = Math.max(suggestedMaxFundamental, 100); // 最低でも100は確保
 
         new Chart(pitchingFundamentalAbilityChartCanvas, {
-            type: 'bar', // ← ここが 'bar' になっています！
+            type: 'bar',
             data: {
                 labels: pitchingFundamentalAbilitiesData.labels,
                 datasets: [{
                     label: '基本能力値',
                     data: pitchingFundamentalAbilitiesData.data,
-                    backgroundColor: 'rgba(255, 99, 132, 0.8)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.8)', // 赤系
                     borderColor: 'rgba(255, 99, 132, 1)',
                     borderWidth: 1
                 }]
@@ -202,7 +203,7 @@ document.addEventListener('DOMContentLoaded', function () {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                indexAxis: 'y', // 横棒グラフ
+                indexAxis: 'y', // 棒を横向きにする
                 scales: {
                     x: {
                         beginAtZero: true,
@@ -217,7 +218,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     },
                     y: {
                         grid: {
-                            display: false
+                            display: false // 横棒グラフなのでY軸のグリッド線は不要
                         }
                     }
                 },
@@ -231,37 +232,59 @@ document.addEventListener('DOMContentLoaded', function () {
                         font: {
                             size: 18
                         }
+                    },
+                    tooltip: { // ツールチップの表示を調整
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.x !== null) {
+                                    label += context.parsed.x;
+                                }
+                                return label;
+                            }
+                        }
                     }
                 }
             }
         });
     }
 
-    // 新しい球速チャート (棒グラフ)
-    const pitchingVelocityChartCanvas = document.getElementById('pitchingVelocityChart');
-    if (pitchingVelocityChartCanvas) {
-        const pitchingVelocityData = JSON.parse(pitchingVelocityChartCanvas.dataset.pitchingVelocity);
+    // ★球速比較チャート (新しい棒グラフ) の追加★
+    const pitchingVelocityComparisonChartCanvas = document.getElementById('pitchingVelocityComparisonChart');
+    if (pitchingVelocityComparisonChartCanvas) {
+        const pitchingVelocityComparisonData = JSON.parse(pitchingVelocityComparisonChartCanvas.dataset.pitchingVelocityComparison);
 
-        const maxVelocity = Math.max(...pitchingVelocityData.data);
-        const suggestedMaxVelocity = Math.ceil(maxVelocity / 20) * 20;
-        const finalMaxVelocity = Math.max(suggestedMaxVelocity, 160);
+        const maxVelocity = Math.max(...pitchingVelocityComparisonData.data);
+        const suggestedMaxVelocity = Math.ceil(maxVelocity / 20) * 20; // 20刻みで切り上げ
+        const finalMaxVelocity = Math.max(suggestedMaxVelocity, 160); // 最低でも160は確保
 
-        new Chart(pitchingVelocityChartCanvas, {
+        new Chart(pitchingVelocityComparisonChartCanvas, {
             type: 'bar',
             data: {
-                labels: pitchingVelocityData.labels,
+                labels: pitchingVelocityComparisonData.labels,
                 datasets: [{
                     label: '球速 (km/h)',
-                    data: pitchingVelocityData.data,
-                    backgroundColor: 'rgba(0, 123, 255, 0.8)',
-                    borderColor: 'rgba(0, 123, 255, 1)',
+                    data: pitchingVelocityComparisonData.data,
+                    backgroundColor: [ // 各棒の色を調整
+                        'rgba(0, 123, 255, 0.8)', // あなたの球速 (青系)
+                        'rgba(255, 193, 7, 0.8)', // チーム内投手平均 (黄系)
+                        'rgba(23, 162, 184, 0.8)' // 投手全体平均 (水色系)
+                    ],
+                    borderColor: [
+                        'rgba(0, 123, 255, 1)',
+                        'rgba(255, 193, 7, 1)',
+                        'rgba(23, 162, 184, 1)'
+                    ],
                     borderWidth: 1
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                indexAxis: 'y',
+                indexAxis: 'y', // 棒を横向きにする
                 scales: {
                     x: {
                         beginAtZero: true,
@@ -291,7 +314,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     },
                     title: {
                         display: true,
-                        text: '球速',
+                        text: '球速 (チーム・全体との比較)',
                         font: {
                             size: 18
                         }
@@ -315,7 +338,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 投手総合ランクチャート (棒グラフ)
+    // ★旧「球速チャート (単体)」の削除★
+    // pitchingVelocityChartCanvas のブロックは削除されました。
+
+    // 投手総合ランクチャート (棒グラフ) - ロジックは変更なし
     const pitchingOverallRankChartCanvas = document.getElementById('pitchingOverallRankChart');
     if (pitchingOverallRankChartCanvas) {
         const pitchingOverallRankData = JSON.parse(pitchingOverallRankChartCanvas.dataset.pitchingOverallRank);

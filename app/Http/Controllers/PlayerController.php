@@ -114,7 +114,8 @@ class PlayerController extends Controller
         // 投球能力データの整形ロジックを修正・分割
         $playerPitchingAbilitiesData = null; // 変化球用
         $playerPitchingFundamentalAbilitiesData = null; // スタミナ・コントロール用
-        $playerPitchingVelocityData = null; // 球速用
+        $playerPitchingVelocityData = null; // 球速（単体）用
+        $playerPitchingVelocityComparisonData = null; // ★球速比較用を追加★
         $playerPitchingOverallRankData = null;
 
         $latestPitchingAbility = $player->pitchingAbilities->first();
@@ -159,16 +160,49 @@ class PlayerController extends Controller
                 ],
             ];
 
-            // 球速データ
+            // 球速データ（単体表示用）
             $playerPitchingVelocityData = [
                 'labels' => ['球速'],
                 'data' => [$latestPitchingAbility->average_velocity],
             ];
 
+            // ★球速比較データ（チーム内平均と投手全体平均）の追加★
+            $playerVelocity = $latestPitchingAbility->average_velocity;
+
+            // 投手全体の平均球速
+            $averagePitcherOverallVelocity = PlayerPitchingAbility::query()
+                ->join('players', 'player_pitching_abilities.player_id', '=', 'players.id')
+                ->where('players.role', '=', '投手')
+                ->avg('average_velocity');
+            $averagePitcherOverallVelocity = round($averagePitcherOverallVelocity ?? 0, 1);
+
+            // 所属チーム内の投手平均球速
+            $averageTeamPitcherVelocity = null;
+            if ($player->team_id) {
+                $averageTeamPitcherVelocity = PlayerPitchingAbility::query()
+                    ->join('players', 'player_pitching_abilities.player_id', '=', 'players.id')
+                    ->where('players.team_id', '=', $player->team_id)
+                    ->where('players.role', '=', '投手')
+                    ->avg('average_velocity');
+                $averageTeamPitcherVelocity = round($averageTeamPitcherVelocity ?? 0, 1);
+            } else {
+                $averageTeamPitcherVelocity = 0; // チーム情報がない場合
+            }
+
+
+            $playerPitchingVelocityComparisonData = [
+                'labels' => ['あなたの球速', 'チーム内投手平均', '投手全体平均'],
+                'data' => [
+                    $playerVelocity,
+                    $averageTeamPitcherVelocity,
+                    $averagePitcherOverallVelocity
+                ],
+            ];
+
 
             // 投手の総合ランクデータと平均値
             // PlayerPitchingAbilityにもoverall_rankカラムがあると仮定
-            $pitchingOverallRank = $latestPitchingAbility->overall_rank ?? 75; 
+            $pitchingOverallRank = $latestPitchingAbility->overall_rank ?? 75;
 
             $averagePitcherOverallRank = PlayerPitchingAbility::query()
                 ->join('players', 'player_pitching_abilities.player_id', '=', 'players.id')
@@ -185,7 +219,7 @@ class PlayerController extends Controller
                 ]
             ];
         }
-        return view('players.show', compact('player', 'playerBattingAbilitiesData', 'playerPitchingAbilitiesData', 'playerPitchingFundamentalAbilitiesData', 'playerPitchingVelocityData', 'playerOverallRankData', 'playerPitchingOverallRankData'));
+        return view('players.show', compact('player', 'playerBattingAbilitiesData', 'playerPitchingAbilitiesData', 'playerPitchingFundamentalAbilitiesData', 'playerPitchingVelocityData', 'playerPitchingVelocityComparisonData', 'playerOverallRankData', 'playerPitchingOverallRankData')); // ★新しいデータを渡す★
     }
 
     /**
