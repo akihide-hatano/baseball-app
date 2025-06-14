@@ -28,12 +28,13 @@
                         @endif
                     </span>
                 </p>
-                <p><strong>結果:</strong> 
-                    <span class="font-semibold 
-                        @if($game->game_result === 'ホーム勝利') text-green-700
-                        @elseif($game->game_result === 'アウェイ勝利') text-blue-700
-                        @elseif($game->game_result === '引き分け') text-gray-700
-                        @else text-gray-700 @endif">
+                <p><strong>結果:</strong>
+                    {{-- ★ここを修正：classの適用方法を修正★ --}}
+                    <span class="font-semibold
+                        {{ ($game->game_result === 'Home Win') ? 'text-green-700' : '' }}
+                        {{ ($game->game_result === 'Away Win') ? 'text-blue-700' : '' }}
+                        {{ ($game->game_result === 'Draw') ? 'text-gray-700' : '' }}
+                        {{ ($game->game_result === null || $game->game_result === '') ? 'text-gray-700' : '' }} ">
                         {{ $game->game_result ?? '-' }}
                     </span>
                 </p>

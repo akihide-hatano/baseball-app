@@ -59,6 +59,7 @@ class GameController extends Controller
         }
 
         // ★ここを追加: ddで$gameの中身を確認★
+        // dd($game);
         // dd($game->gamePlayerStats->first());
 
         // ビューに試合データと選手成績データを渡す
