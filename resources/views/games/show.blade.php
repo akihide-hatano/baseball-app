@@ -19,7 +19,7 @@
                 <p><strong>ホームチーム:</strong> <span class="text-blue-700">{{ $game->homeTeam->team_name ?? '不明' }}</span></p>
                 <p><strong>アウェイチーム:</strong> <span class="text-blue-700">{{ $game->awayTeam->team_name ?? '不明' }}</span></p>
 
-                <p><strong>スコア:</strong> 
+                <p><strong>スコア:</strong>
                     <span class="text-blue-700">
                         @if($game->home_score !== null && $game->away_score !== null)
                             {{ $game->home_score }} - {{ $game->away_score }}
@@ -29,13 +29,27 @@
                     </span>
                 </p>
                 <p><strong>結果:</strong>
-                    {{-- ★ここを修正：classの適用方法を修正★ --}}
-                    <span class="font-semibold
-                        {{ ($game->game_result === 'Home Win') ? 'text-green-700' : '' }}
-                        {{ ($game->game_result === 'Away Win') ? 'text-blue-700' : '' }}
-                        {{ ($game->game_result === 'Draw') ? 'text-gray-700' : '' }}
-                        {{ ($game->game_result === null || $game->game_result === '') ? 'text-gray-700' : '' }} ">
-                        {{ $game->game_result ?? '-' }}
+                    {{-- ★ここを修正：表示テキストとクラスの適用方法★ --}}
+                    @php
+                        $displayResultText = '-';
+                        $resultTextColorClass = 'text-gray-700'; // デフォルト
+
+                        if ($game->game_result === 'Home Win') {
+                            $displayResultText = ($game->homeTeam->team_name ?? 'ホームチーム') . 'の勝ち';
+                            $resultTextColorClass = 'text-green-700';
+                        } elseif ($game->game_result === 'Away Win') {
+                            $displayResultText = ($game->awayTeam->team_name ?? 'アウェイチーム') . 'の勝ち';
+                            $resultTextColorClass = 'text-blue-700'; // アウェイ勝利は区別のため青に
+                        } elseif ($game->game_result === '引き分け') { // データベースの 'Draw' がシーダーで '引き分け' になっている場合
+                            $displayResultText = '引き分け';
+                            $resultTextColorClass = 'text-gray-700';
+                        } elseif ($game->game_result === 'Draw') { // データベースの 'Draw' がそのままの場合
+                            $displayResultText = '引き分け';
+                            $resultTextColorClass = 'text-gray-700';
+                        }
+                    @endphp
+                    <span class="font-semibold {{ $resultTextColorClass }}">
+                        {{ $displayResultText }}
                     </span>
                 </p>
             </div>
