@@ -33,3 +33,5 @@ Route::get('/players/{id}', [PlayerController::class, 'show'])->name('players.sh
 Route::get('/teams', [TeamController::class, 'index'])->name('teams.index');
 // 特定のチーム詳細ページのルートをコントローラーアクションにマッピング
 Route::get('/teams/{id}', [TeamController::class, 'show'])->name('teams.show');
+// 試合の詳細をコントローラーアクションにマッピング
+Route::get('/games/{id}', [App\Http\Controllers\GameController::class, 'show'])->name('games.show');
