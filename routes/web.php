@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PlayerController; // コントローラーをuseする
 use App\Http\Controllers\TeamController;   // コントローラーをuseする
+use App\Http\Controllers\GameController;
 
 // トップページ（ルートURL）
 Route::get('/', function () {
@@ -33,5 +34,7 @@ Route::get('/players/{id}', [PlayerController::class, 'show'])->name('players.sh
 Route::get('/teams', [TeamController::class, 'index'])->name('teams.index');
 // 特定のチーム詳細ページのルートをコントローラーアクションにマッピング
 Route::get('/teams/{id}', [TeamController::class, 'show'])->name('teams.show');
-// 試合の詳細をコントローラーアクションにマッピング
-Route::get('/games/{id}', [App\Http\Controllers\GameController::class, 'show'])->name('games.show');
+
+// 試合関連のルート
+Route::get('/games', [GameController::class, 'index'])->name('games.index'); // ★★★ この行を追加 ★★★
+Route::get('/games/{id}', [GameController::class, 'show'])->name('games.show');
