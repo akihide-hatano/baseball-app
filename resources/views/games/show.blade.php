@@ -29,7 +29,6 @@
                     </span>
                 </p>
                 <p><strong>結果:</strong>
-                    {{-- ★ここを修正：表示テキストとクラスの適用方法★ --}}
                     @php
                         $displayResultText = '-';
                         $resultTextColorClass = 'text-gray-700'; // デフォルト
@@ -39,11 +38,8 @@
                             $resultTextColorClass = 'text-green-700';
                         } elseif ($game->game_result === 'Away Win') {
                             $displayResultText = ($game->awayTeam->team_name ?? 'アウェイチーム') . 'の勝ち';
-                            $resultTextColorClass = 'text-blue-700'; // アウェイ勝利は区別のため青に
-                        } elseif ($game->game_result === '引き分け') { // データベースの 'Draw' がシーダーで '引き分け' になっている場合
-                            $displayResultText = '引き分け';
-                            $resultTextColorClass = 'text-gray-700';
-                        } elseif ($game->game_result === 'Draw') { // データベースの 'Draw' がそのままの場合
+                            $resultTextColorClass = 'text-blue-700';
+                        } elseif ($game->game_result === '引き分け' || $game->game_result === 'Draw') {
                             $displayResultText = '引き分け';
                             $resultTextColorClass = 'text-gray-700';
                         }
@@ -61,24 +57,43 @@
             @if($game->gamePlayerStats->isEmpty())
                 <p class="text-gray-600">この試合の選手成績データはありません。</p>
             @else
-                {{-- ホームチームとアウェイチームでテーブルを分ける、またはチームでグループ化する --}}
                 @php
-                    $homeTeamStats = $game->gamePlayerStats->filter(function($stat) use ($game) {
-                        return $stat->team_id === $game->home_team_id;
+                    $homePitchers = $game->gamePlayerStats->filter(function($stat) use ($game) {
+                        return $stat->team_id === $game->home_team_id && ($stat->player->role ?? '') === '投手';
                     });
-                    $awayTeamStats = $game->gamePlayerStats->filter(function($stat) use ($game) {
-                        return $stat->team_id === $game->away_team_id;
+                    $homeBatters = $game->gamePlayerStats->filter(function($stat) use ($game) {
+                        return $stat->team_id === $game->home_team_id && ($stat->player->role ?? '') !== '投手';
+                    });
+                    $awayPitchers = $game->gamePlayerStats->filter(function($stat) use ($game) {
+                        return $stat->team_id === $game->away_team_id && ($stat->player->role ?? '') === '投手';
+                    });
+                    $awayBatters = $game->gamePlayerStats->filter(function($stat) use ($game) {
+                        return $stat->team_id === $game->away_team_id && ($stat->player->role ?? '') !== '投手';
                     });
                 @endphp
 
-                @if($homeTeamStats->isNotEmpty())
+                @if($homePitchers->isNotEmpty() || $homeBatters->isNotEmpty())
                     <h3 class="text-xl font-bold mb-3 text-purple-700">{{ $game->homeTeam->team_name ?? 'ホームチーム' }}</h3>
-                    @include('games._player_stats_table', ['playerGameStats' => $homeTeamStats])
+                    @if($homePitchers->isNotEmpty())
+                        <h4 class="text-lg font-semibold mb-2 text-gray-700">投手陣</h4>
+                        @include('games._player_stats_table', ['playerGameStats' => $homePitchers])
+                    @endif
+                    @if($homeBatters->isNotEmpty())
+                        <h4 class="text-lg font-semibold mb-2 text-gray-700 mt-4">野手陣</h4>
+                        @include('games._player_stats_table', ['playerGameStats' => $homeBatters])
+                    @endif
                 @endif
 
-                @if($awayTeamStats->isNotEmpty())
+                @if($awayPitchers->isNotEmpty() || $awayBatters->isNotEmpty())
                     <h3 class="text-xl font-bold mb-3 mt-6 text-purple-700">{{ $game->awayTeam->team_name ?? 'アウェイチーム' }}</h3>
-                    @include('games._player_stats_table', ['playerGameStats' => $awayTeamStats])
+                    @if($awayPitchers->isNotEmpty())
+                        <h4 class="text-lg font-semibold mb-2 text-gray-700">投手陣</h4>
+                        @include('games._player_stats_table', ['playerGameStats' => $awayPitchers])
+                    @endif
+                    @if($awayBatters->isNotEmpty())
+                        <h4 class="text-lg font-semibold mb-2 text-gray-700 mt-4">野手陣</h4>
+                        @include('games._player_stats_table', ['playerGameStats' => $awayBatters])
+                    @endif
                 @endif
             @endif
         </div>

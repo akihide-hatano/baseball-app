@@ -63,7 +63,7 @@
             @endif
         </div>
 
-{{-- 直近の試合結果セクション --}}
+        {{-- 直近の試合結果セクション --}}
         <div class="bg-white shadow-xl rounded-lg p-8 mb-8">
             <h2 class="text-2xl font-bold mb-4 text-indigo-700">直近の試合結果</h2>
             @if($recentGames->isEmpty())
@@ -80,6 +80,7 @@
                                 <th class="py-3 px-4 border-b text-left">アウェイチーム</th>
                                 <th class="py-3 px-4 border-b text-left">スコア</th>
                                 <th class="py-3 px-4 border-b text-left">結果</th>
+                                <th class="py-3 px-4 border-b text-left">詳細</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -119,7 +120,7 @@
                                         }
                                     }
                                 @endphp
-                                <tr class="hover:bg-gray-100 {{ $rowClass }}"> {{-- ここに行のクラスを適用 --}}
+                                <tr class="hover:bg-gray-100 {{ $rowClass }}">
                                     <td class="py-3 px-4 border-b">{{ \Carbon\Carbon::parse($game->game_date)->format('Y年m月d日') }}</td>
                                     <td class="py-3 px-4 border-b">{{ \Carbon\Carbon::parse($game->game_time)->format('H:i') }}</td>
                                     <td class="py-3 px-4 border-b">{{ $game->stadium ?? '-' }}</td>
@@ -132,7 +133,7 @@
                                             -
                                         @endif
                                     </td>
-                                    <td class="py-3 px-4 border-b font-semibold"> {{-- 結果を太字に --}}
+                                    <td class="py-3 px-4 border-b font-semibold">
                                         @if ($displayResult == '勝ち')
                                             <span class="text-green-700">{{ $displayResult }}</span>
                                         @elseif ($displayResult == '負け')
@@ -140,6 +141,12 @@
                                         @else
                                             <span class="text-gray-700">{{ $displayResult }}</span>
                                         @endif
+                                    </td>
+                                    {{-- ★ここを修正：tdにflexクラスを追加★ --}}
+                                    <td class="py-3 px-4 border-b flex items-center justify-center whitespace-nowrap">
+                                        <a href="{{ route('games.show', $game->id) }}" class="inline-block bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-1 px-3 rounded-full text-sm transition duration-300">
+                                            詳細
+                                        </a>
                                     </td>
                                 </tr>
                             @endforeach
@@ -200,9 +207,8 @@
                                     @php
                                         $latestPitchingStat = $player->yearlyPitchingStats->first();
                                     @endphp
-                                    {{-- @if ($latestPitchingStat) @dd($latestPitchingStat) @else @dd('この選手には投球成績がありません。player_id: ' . $player->id . ' name: ' . $player->name) @endif --}}
                                     <td class="py-3 px-4 border-b">
-                                        {{ $latestPitchingStat ? number_format($latestPitchingStat->earned_run_average, 2) : '-.-' }} {{-- ★ここを修正しました★ --}}
+                                        {{ $latestPitchingStat ? number_format($latestPitchingStat->earned_run_average, 2) : '-.-' }}
                                     </td>
                                     <td class="py-3 px-4 border-b">
                                         {{ $latestPitchingStat ? $latestPitchingStat->wins : '-' }}
