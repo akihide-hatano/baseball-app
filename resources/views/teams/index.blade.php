@@ -8,7 +8,7 @@
     <div class="container mx-auto p-4">
         <h1 class="text-3xl font-bold mb-6 text-center text-blue-600">プロ野球チーム一覧</h1>
 
-        {{-- ★★★ ここから検索フォームを追加 (変更なし) ★★★ --}}
+        {{-- ★★★ ここから検索フォーム --}}
         <div class="bg-white shadow-md rounded-lg p-6 mb-6">
             <h3 class="text-xl font-bold mb-4 text-gray-800">チームを検索</h3>
             <form action="{{ route('teams.index') }}" method="GET" class="space-y-4 md:space-y-0 md:flex md:gap-4 items-end">
