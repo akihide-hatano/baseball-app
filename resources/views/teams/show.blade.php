@@ -8,10 +8,23 @@
     <div class="container mx-auto p-8">
         <h1 class="text-4xl font-extrabold mb-8 text-center text-indigo-800">{{ $team->team_name }}</h1>
 
+        {{-- ★★★ ここに成功メッセージを表示するコードを追加 ★★★ --}}
+        @if (session('success'))
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <strong class="font-bold">成功!</strong>
+                <span class="block sm:inline">{{ session('success') }}</span>
+                <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
+                    <svg class="fill-current h-6 w-6 text-green-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 2.65a1.2 1.2 0 1 1-1.697-1.697l2.65-2.651-2.65-2.651a1.2 1.2 0 0 1 1.697-1.697L10 8.183l2.651-2.651a1.2 1.2 0 1 1 1.697 1.697L11.819 10l2.65 2.651a1.2 1.2 0 0 1 0 1.698z"/></svg>
+                </span>
+            </div>
+        @endif
+        {{-- ★★★ ここまで成功メッセージのコード ★★★ --}}
+
+
         {{-- チーム基本情報と優勝回数 --}}
         <div class="bg-white shadow-xl rounded-lg p-8 mb-8">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-lg">
-                <p><strong>ニックネーム:</strong> <span class="text-blue-700">{{ $team->team_nickname }}</span></p>
+                <p><strong>ニックネーム:</strong> <span class="text-blue-700">{{ $team->nickname ?? $team->team_nickname }}</span></p> {{-- nicknameアクセサ考慮 --}}
                 <p><strong>本拠地:</strong> <span class="text-blue-700">{{ $team->location }}</span></p>
                 {{-- founded_atはnullの可能性があるため、NULLチェックを追加 --}}
                 <p><strong>設立日:</strong> <span class="text-blue-700">{{ $team->founded_at ? $team->founded_at->format('Y年m月d日') : '不明' }}</span></p>
@@ -21,7 +34,24 @@
                 {{-- チームに所属する選手の数なども表示可能 --}}
                 <p><strong>所属選手数:</strong> <span class="text-blue-700">{{ $team->players->count() }} 人</span></p>
             </div>
+
+            {{-- ★★★ 編集・削除ボタンを追加/確認 ★★★ --}}
+            <div class="mt-6 flex justify-end space-x-4">
+                <a href="{{ route('teams.edit', $team->id) }}" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded transition duration-300">
+                    編集
+                </a>
+                <form action="{{ route('teams.destroy', $team->id) }}" method="POST" onsubmit="return confirm('本当にこのチームを削除しますか？');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-300">
+                        削除
+                    </button>
+                </form>
+            </div>
+            {{-- ★★★ 編集・削除ボタンここまで ★★★ --}}
+
         </div>
+
 
         {{-- 歴代成績の表示セクション --}}
         <div class="bg-white shadow-xl rounded-lg p-8 mb-8">
@@ -124,8 +154,8 @@
                                     <td class="py-3 px-4 border-b">{{ \Carbon\Carbon::parse($game->game_date)->format('Y年m月d日') }}</td>
                                     <td class="py-3 px-4 border-b">{{ \Carbon\Carbon::parse($game->game_time)->format('H:i') }}</td>
                                     <td class="py-3 px-4 border-b">{{ $game->stadium ?? '-' }}</td>
-                                    <td class="py-3 px-4 border-b">{{ $game->homeTeam->team_name ?? '不明' }}</td>
-                                    <td class="py-3 px-4 border-b">{{ $game->awayTeam->team_name ?? '不明' }}</td>
+                                    <td class="py-3 px-4 border-b">{{ $game->homeTeam->nickname ?? $game->homeTeam->team_name }}</td> {{-- nickname考慮 --}}
+                                    <td class="py-3 px-4 border-b">{{ $game->awayTeam->nickname ?? $game->awayTeam->team_name }}</td> {{-- nickname考慮 --}}
                                     <td class="py-3 px-4 border-b">
                                         @if($game->home_score !== null && $game->away_score !== null)
                                             {{ $game->home_score }} - {{ $game->away_score }}
@@ -142,7 +172,6 @@
                                             <span class="text-gray-700">{{ $displayResult }}</span>
                                         @endif
                                     </td>
-                                    {{-- ★ここを修正：tdにflexクラスを追加★ --}}
                                     <td class="py-3 px-4 border-b flex items-center justify-center whitespace-nowrap">
                                         <a href="{{ route('games.show', $game->id) }}" class="inline-block bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-1 px-3 rounded-full text-sm transition duration-300">
                                             詳細
@@ -232,7 +261,7 @@
         </div>
 
 
-        <div class="text-center">
+        <div class="text-center mt-8">
             <a href="{{ route('teams.index') }}" class="inline-block bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-full text-lg transition duration-300 transform hover:scale-105">
                 チーム一覧に戻る
             </a>
