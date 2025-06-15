@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Team;
 use App\Models\League; // Leagueモデルをuseに追加
 use App\Models\Game; // GameモデルはTeamControllerでは通常使われませんが、useに存在するため残します
+use Illuminate\Support\Facades\Log;
 
 class TeamController extends Controller
 {
