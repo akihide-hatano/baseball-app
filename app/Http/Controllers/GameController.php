@@ -21,7 +21,7 @@ class GameController extends Controller
                       ->get(); // まず全ての、または十分な件数の試合を取得
 
         // ★ここを追加: rawな$gamesの中身を確認★
-        dd($games);
+        // dd($games);
 
         // 取得した試合を日付でグループ化
         // 日付をキーとして、その日付の試合のコレクションがネストされる
@@ -45,7 +45,7 @@ class GameController extends Controller
         // });
 
         // ★ここを追加: $groupedGamesの中身を確認★
-        dd($groupedGames);
+        // dd($groupedGames);
 
         // 取得したグループ化された試合データをビューに渡す
         return view('games.index', compact('groupedGames'));
