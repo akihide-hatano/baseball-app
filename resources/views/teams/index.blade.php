@@ -8,7 +8,7 @@
     <div class="container mx-auto p-4">
         <h1 class="text-3xl font-bold mb-6 text-center text-blue-600">プロ野球チーム一覧</h1>
 
-        {{-- ★★★ ここから検索フォームを追加 ★★★ --}}
+        {{-- ★★★ ここから検索フォームを追加 (変更なし) ★★★ --}}
         <div class="bg-white shadow-md rounded-lg p-6 mb-6">
             <h3 class="text-xl font-bold mb-4 text-gray-800">チームを検索</h3>
             <form action="{{ route('teams.index') }}" method="GET" class="space-y-4 md:space-y-0 md:flex md:gap-4 items-end">
@@ -47,29 +47,37 @@
         </div>
         {{-- ★★★ ここまで検索フォームを追加 ★★★ --}}
 
-        @if($teams->isEmpty())
-            <p class="text-center text-gray-600">チームデータがありません。</p>
-        @else
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @foreach ($teams as $team)
-                    <div class="bg-white rounded-lg shadow-md p-6 transform transition-transform hover:scale-105">
-                        <h2 class="text-xl font-semibold mb-2 text-indigo-700">{{ $team->team_name }}</h2>
-                        <p class="text-sm text-gray-600">ニックネーム: {{ $team->team_nickname }}</p>
-                        <p class="text-sm text-gray-600">本拠地: {{ $team->location }}</p>
-                        <p class="text-sm text-gray-600 mb-4">設立: {{ $team->founded_at->format('Y年m月d日') }}</p>
-                        {{-- リーグ名も表示 --}}
-                        <p class="text-sm text-gray-600 mb-4">リーグ: {{ $team->league->name ?? '不明' }}</p>
-                        <a href="{{ route('teams.show', $team->id) }}" class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full text-sm transition duration-300">
-                            詳細を見る
-                        </a>
-                    </div>
-                @endforeach
-            </div>
+        {{-- ★★★ Bladeでリーグごとにグループ化して表示 ★★★ --}}
+        @php
+            // コントローラから渡された $teams コレクションをリーグ名でグループ化
+            // リーグが存在しないチームは「不明なリーグ」にグループ化される
+            $groupedTeamsByLeague = $teams->groupBy(function($team) {
+                return $team->league->name ?? '不明なリーグ';
+            })->sortKeys(); // リーグ名をアルファベット順にソート (セ・リーグ、パ・リーグなど)
+        @endphp
 
-            {{-- ページネーションが必要な場合、Controllerのindexメソッドでpaginate()を使う --}}
-            {{-- <div class="mt-8">
-                {{ $teams->links() }}
-            </div> --}}
+        @if($groupedTeamsByLeague->isEmpty())
+            <p class="text-center text-gray-600">表示できるチームデータがありません。</p>
+        @else
+            @foreach ($groupedTeamsByLeague as $leagueName => $teamsInLeague)
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold mb-4 text-center text-purple-700">{{ $leagueName }}</h2> {{-- リーグ名の見出し --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        @foreach ($teamsInLeague as $team)
+                            <div class="bg-white rounded-lg shadow-md p-6 transform transition-transform hover:scale-105">
+                                <h2 class="text-xl font-semibold mb-2 text-indigo-700">{{ $team->team_name }}</h2>
+                                <p class="text-sm text-gray-600">ニックネーム: {{ $team->nickname ?? $team->team_nickname }}</p>
+                                <p class="text-sm text-gray-600">本拠地: {{ $team->location }}</p>
+                                <p class="text-sm text-gray-600 mb-4">設立: {{ $team->founded_at->format('Y年m月d日') }}</p>
+                                <p class="text-sm text-gray-600 mb-4">リーグ: {{ $team->league->name ?? '不明' }}</p>
+                                <a href="{{ route('teams.show', $team->id) }}" class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full text-sm transition duration-300">
+                                    詳細を見る
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endforeach
         @endif
     </div>
 </x-app-layout>

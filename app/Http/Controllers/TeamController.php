@@ -3,21 +3,20 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Team; // Teamモデルをuseする
-use App\Models\League; // Leagueモデルをuseに追加 ★追加★
-use App\Models\Game; // Gameモデルは既存のshowメソッドで使われています
+use App\Models\Team;
+use App\Models\League;
+use App\Models\Game; // GameモデルはTeamControllerでは通常使われませんが、useに存在するため残します
 
 class TeamController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request) // ★★★ Request $request を引数に追加 ★★★
+    public function index(Request $request)
     {
         // チームの基本クエリ
-        $query = Team::with('league'); // リーグ情報をEagerロード ★変更★
-
-        // ★★★ ここから検索条件を追加 ★★★
+        // リーグ情報もEagerロードしておくと、Bladeでのleague.nameアクセスが効率的
+        $query = Team::with('league');
 
         // リーグIDによるフィルタリング
         if ($request->filled('league_id')) {
@@ -26,22 +25,22 @@ class TeamController extends Controller
 
         // チーム名によるフリーワード検索
         if ($request->filled('search_team_name')) {
-            $searchTerm = '%' . $request->input('search_team_name') . '%'; // 部分一致検索のため%を追加
+            $searchTerm = '%' . $request->input('search_team_name') . '%';
             $query->where(function($q) use ($searchTerm) {
                 $q->where('team_name', 'like', $searchTerm)
-                  ->orWhere('team_nickname', 'like', $searchTerm); // ニックネームでも検索
+                  ->orWhere('team_nickname', 'like', $searchTerm);
             });
         }
 
-        // ★★★ ここまで検索条件を追加 ★★★
+        // フィルタリングされたチームデータを取得し、チーム名でソート
+        // ここではリーグによるグループ化は行わない
+        $teams = $query->orderBy('team_name')->get(); // ★★★ ここでget()するだけ ★★★
 
-        // フィルタリングされたチームデータを取得
-        $teams = $query->orderBy('team_name')->get(); // 必要に応じてソート順を変更
-
-        // ★★★ 全てのリーグデータを取得し、ビューに渡す ★★★
+        // 全てのリーグデータを取得し、ビューに渡す（検索フォーム用）
         $leagues = League::all();
 
-        return view('teams.index', compact('teams', 'leagues')); // ★'leagues'変数をビューに渡す ★変更★
+        // ★★★ $teams（グループ化されていないコレクション）と $leagues を渡す ★★★
+        return view('teams.index', compact('teams', 'leagues'));
     }
 
     /**
@@ -49,7 +48,6 @@ class TeamController extends Controller
      */
     public function create()
     {
-        // チーム作成フォームを表示するために、リーグ選択肢が必要な場合
         $leagues = League::all();
         return view('teams.create', compact('leagues'));
     }
@@ -59,9 +57,8 @@ class TeamController extends Controller
      */
     public function store(Request $request)
     {
-        // バリデーションルール
         $request->validate([
-            'league_id' => 'required|exists:leagues,id', // リーグIDのバリデーションを追加
+            'league_id' => 'required|exists:leagues,id',
             'team_name' => 'required|string|max:255|unique:teams,team_name',
             'team_nickname' => 'required|string|max:255|unique:teams,team_nickname',
             'location' => 'required|string|max:255',
@@ -78,19 +75,16 @@ class TeamController extends Controller
      */
     public function show($id)
     {
-        // Teamモデルにleagueリレーションが追加されている場合、ここでleagueをEagerロードできます。
-        $team = Team::with('league')->find($id); // ★'league'をEagerロードに追加★
+        $team = Team::with('league')->find($id);
 
-        // もし $team が取得できなかった場合（nullの場合）のハンドリング
         if (!$team) {
             abort(404, 'チームが見つかりませんでした。');
         }
 
-        // チームに所属する選手、年度別成績、そして試合データをEagerロード
         $team->load([
             'players',
             'yearlyTeamStats' => function ($query) {
-                $query->orderBy('year', 'desc'); // 最新の年を先に取得
+                $query->orderBy('year', 'desc');
             },
             'homeGames' => function ($query) {
                 $query->with(['homeTeam', 'awayTeam'])->orderBy('game_date', 'desc')->orderBy('game_time', 'desc');
@@ -100,13 +94,11 @@ class TeamController extends Controller
             }
         ]);
 
-        // ホーム試合とアウェイ試合を結合し、日付と時刻でソートして直近10件を取得
         $allTeamGames = $team->homeGames->merge($team->awayGames);
         $recentGames = $allTeamGames->sortByDesc(function ($game) {
-            return $game->game_date . ' ' . $game->game_time; // 日付と時刻で複合ソート
-        })->take(10); // 直近10試合
+            return $game->game_date . ' ' . $game->game_time;
+        })->take(10);
 
-        // ビューにデータを渡す
         return view('teams.show', compact('team', 'recentGames'));
     }
 
@@ -115,7 +107,6 @@ class TeamController extends Controller
      */
     public function edit(Team $team)
     {
-        // 編集フォームを表示するために、リーグ選択肢が必要な場合
         $leagues = League::all();
         return view('teams.edit', compact('team', 'leagues'));
     }
@@ -126,7 +117,7 @@ class TeamController extends Controller
     public function update(Request $request, Team $team)
     {
         $request->validate([
-            'league_id' => 'required|exists:leagues,id', // リーグIDのバリデーションを追加
+            'league_id' => 'required|exists:leagues,id',
             'team_name' => 'required|string|max:255|unique:teams,team_name,' . $team->id,
             'team_nickname' => 'required|string|max:255|unique:teams,team_nickname,' . $team->id,
             'location' => 'required|string|max:255',
@@ -143,7 +134,7 @@ class TeamController extends Controller
      */
     public function destroy(Team $team)
     {
-        $team->delete(); // チームを削除
+        $team->delete();
         return redirect()->route('teams.index')->with('success', 'チームが削除されました！');
     }
 }
