@@ -2,35 +2,43 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use Illuminate\Http\Request; // Illuminate\Http\Request をuseに追加
 use App\Models\Game;
-use Carbon\Carbon;
 use App\Models\Team;
-use App\Models\GamePlayerStat; // GamePlayerStat モデルをuseに追加
+use Carbon\Carbon;
+use App\Models\GamePlayerStat;
 
 class GameController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request) // ★★★ ここに「Request $request」を追加しました ★★★
     {
-    // 最新の試合を日付と時刻で降順に取得
-        $games = Game::with(['homeTeam', 'awayTeam'])
-                      ->orderBy('game_date', 'desc') // 日付で降順ソート
-                      ->orderBy('game_time', 'desc') // 時刻で降順ソート (同日内の順序のため)
-                      ->get(); // まず全ての、または十分な件数の試合を取得
+        // まず、全てのチームデータを取得し、ビューに渡せるように準備
+        $teams = Team::all(); // 検索フォームのチーム選択用に使用
 
-        // // ★★★ ここを追加: 各ゲームのhomeTeamとawayTeamのnicknameを確認 ★★★
-        // // dump()は実行を停止せずに出力します。最後にdd()で停止させます。
-        // foreach ($games as $game) {
-        //     dump("Game ID: " . $game->id);
-        //     dump("Home Team Nickname: " . ($game->homeTeam->nickname ?? 'N/A')); // nicknameが取得できなければ'N/A'
-        //     dump("Away Team Nickname: " . ($game->awayTeam->nickname ?? 'N/A')); // nicknameが取得できなければ'N/A'
-        //     dump("---");
-        // }
-        // dd("Finished dumping game teams. Now will dump grouped games."); // ここでスクリプトが停止します
-        // // ★★★ ここまで追加 ★★★
+        // 試合の基本クエリ
+        $query = Game::with(['homeTeam', 'awayTeam'])
+                    ->orderBy('game_date', 'desc')
+                    ->orderBy('game_time', 'desc');
+
+        // チームIDによるフィルタリング
+        if ($request->filled('team_id')) {
+            $teamId = $request->input('team_id');
+            $query->where(function($q) use ($teamId) {
+                $q->where('home_team_id', $teamId)
+                ->orWhere('away_team_id', $teamId);
+            });
+        }
+
+        // 実施日によるフィルタリング
+        if ($request->filled('search_date')) {
+            $searchDate = Carbon::parse($request->input('search_date'))->format('Y-m-d');
+            $query->whereDate('game_date', $searchDate);
+        }
+
+        $games = $query->get(); // フィルタリングされた試合データを取得
 
         // 取得した試合を日付でグループ化
         $groupedGames = $games->groupBy(function($game) {
@@ -38,7 +46,6 @@ class GameController extends Controller
         });
 
         // 取得したグループ化された試合データと全てのチームデータをビューに渡す
-        $teams = Team::all(); // この行は元々あり、ここで全てのチームデータが取得されます
         return view('games.index', compact('groupedGames', 'teams'));
     }
 
@@ -80,10 +87,6 @@ class GameController extends Controller
         if (!$game) {
             abort(404, '指定された試合が見つかりませんでした。');
         }
-
-        // ★ここを追加: ddで$gameの中身を確認★
-        // dd($game);
-        // dd($game->gamePlayerStats->first());
 
         // ビューに試合データと選手成績データを渡す
         return view('games.show', compact('game'));
