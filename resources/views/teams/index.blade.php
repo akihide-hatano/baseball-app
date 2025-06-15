@@ -8,44 +8,62 @@
     <div class="container mx-auto p-4">
         <h1 class="text-3xl font-bold mb-6 text-center text-blue-600">プロ野球チーム一覧</h1>
 
-        {{-- ★★★ ここから検索フォーム --}}
-        <div class="bg-white shadow-md rounded-lg p-6 mb-6">
-            <h3 class="text-xl font-bold mb-4 text-gray-800">チームを検索</h3>
-            <form action="{{ route('teams.index') }}" method="GET" class="space-y-4 md:space-y-0 md:flex md:gap-4 items-end">
-                {{-- リーグ選択ドロップダウン --}}
-                <div>
-                    <label for="league_id" class="block text-sm font-medium text-gray-700">リーグ</label>
-                    <select id="league_id" name="league_id" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-                        <option value="">全てのリーグ</option>
-                        @foreach($leagues as $league)
-                            <option value="{{ $league->id }}" @selected(request('league_id') == $league->id)>
-                                {{ $league->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+        {{-- ★★★ 新しいチーム作成ボタンと検索フォームを統合したセクション ★★★ --}}
+        <div class="bg-white shadow-xl rounded-lg p-6 mb-8"> {{-- 全体を囲むコンテナ --}}
+            <h3 class="text-xl font-bold mb-4 text-gray-800">チーム管理機能</h3> {{-- セクションタイトル --}}
 
-                {{-- チーム名フリーワード検索 --}}
-                <div>
-                    <label for="search_team_name" class="block text-sm font-medium text-gray-700">チーム名検索</label>
-                    <input type="text" id="search_team_name" name="search_team_name" value="{{ request('search_team_name') }}" placeholder="チーム名を入力" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+            {{-- チーム作成ボタン --}}
+            <div class="text-center mb-6 pb-6 border-b border-gray-200"> {{-- 作成ボタンとその下線 --}}
+                {{-- flex と gap-x-4 を追加し、中央寄せにするために justify-center も追加 --}}
+                <div class="flex justify-center gap-x-10">
+                    <a href="{{ route('teams.create') }}" class="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-full text-lg transition duration-300 transform hover:scale-105 shadow-lg">
+                        新しいチームを作成
+                    </a>
+                    <a href="{{ route('players.create') }}" class="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-full text-lg transition duration-300 transform hover:scale-105 shadow-lg">
+                        新しい選手を作成
+                    </a>
                 </div>
+            </div>
 
-                {{-- 検索ボタン --}}
-                <div class="flex gap-2">
-                    <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        検索
-                    </button>
-                    {{-- 検索条件をクリアするボタン --}}
-                    @if(request('league_id') || request('search_team_name'))
-                        <a href="{{ route('teams.index') }}" class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            クリア
-                        </a>
-                    @endif
-                </div>
-            </form>
+            {{-- チーム検索フォーム --}}
+            <div>
+                <h4 class="text-lg font-bold mb-4 text-gray-700">チームを検索</h4> {{-- 検索フォームのサブタイトル --}}
+                <form action="{{ route('teams.index') }}" method="GET" class="space-y-4 md:space-y-0 md:flex md:gap-4 items-end">
+                    {{-- リーグ選択ドロップダウン --}}
+                    <div>
+                        <label for="league_id" class="block text-sm font-medium text-gray-700">リーグ</label>
+                        <select id="league_id" name="league_id" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                            <option value="">全てのリーグ</option>
+                            @foreach($leagues as $league)
+                                <option value="{{ $league->id }}" @selected(request('league_id') == $league->id)>
+                                    {{ $league->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- チーム名フリーワード検索 --}}
+                    <div>
+                        <label for="search_team_name" class="block text-sm font-medium text-gray-700">チーム名検索</label>
+                        <input type="text" id="search_team_name" name="search_team_name" value="{{ request('search_team_name') }}" placeholder="チーム名を入力" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                    </div>
+
+                    {{-- 検索ボタン --}}
+                    <div class="flex gap-2">
+                        <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            検索
+                        </button>
+                        {{-- 検索条件をクリアするボタン --}}
+                        @if(request('league_id') || request('search_team_name'))
+                            <a href="{{ route('teams.index') }}" class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                クリア
+                            </a>
+                        @endif
+                    </div>
+                </form>
+            </div>
         </div>
-        {{-- ★★★ ここまで検索フォームを追加 ★★★ --}}
+        {{-- ★★★ 統合セクションここまで ★★★ --}}
 
         {{-- ★★★ Bladeでリーグごとにグループ化して表示 ★★★ --}}
         @php

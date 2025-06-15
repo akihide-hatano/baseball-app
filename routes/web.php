@@ -27,6 +27,7 @@ Route::middleware('auth')->group(function () {
     // 選手関連のルート (既存のまま)
     Route::get('/players', [PlayerController::class, 'index'])->name('players.index');
     Route::get('/players/{id}', [PlayerController::class, 'show'])->name('players.show');
+    Route::get('/players/create', [PlayerController::class, 'create'])->name('players.create');
 
     // ★★★ チーム関連のルート (CRUD 全て手動定義 - 順序とパラメータ名を修正) ★★★
 
