@@ -32,15 +32,19 @@ class GameController extends Controller
             });
         }
 
-        // 実施日によるフィルタリング
-        if ($request->filled('search_date')) {
-            $searchDate = Carbon::parse($request->input('search_date'))->format('Y-m-d');
-            $query->whereDate('game_date', $searchDate);
+        // ★★★ 実施月によるフィルタリングを追加 (search_dateの代わり) ★★★
+        if ($request->filled('search_month')) {
+            $searchMonth = $request->input('search_month');
+            // whereMonthを使ってgame_dateカラムの月部分をフィルタリング
+            $query->whereMonth('game_date', $searchMonth);
         }
+        // ★★★ ここまで変更 ★★★
 
         $games = $query->get(); // フィルタリングされた試合データを取得
 
         // 取得した試合を日付でグループ化
+        // ここは日付でグループ化するままでOKです。
+        // 検索は月で行われますが、表示は日付ごとになります。
         $groupedGames = $games->groupBy(function($game) {
             return Carbon::parse($game->game_date)->format('Y年m月d日');
         });

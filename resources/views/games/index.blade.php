@@ -8,7 +8,7 @@
     <div class="container mx-auto p-8">
         <h1 class="text-4xl font-extrabold mb-8 text-center text-indigo-800">直近の試合結果</h1>
 
-        {{-- ★★★ ここから検索フォームを追加 ★★★ --}}
+        {{-- ★★★ 検索フォーム ★★★ --}}
         <div class="bg-white shadow-xl rounded-lg p-6 mb-8">
             <h3 class="text-xl font-bold mb-4 text-gray-800">試合を検索</h3>
             <form action="{{ route('games.index') }}" method="GET" class="space-y-4 md:space-y-0 md:flex md:gap-4 items-end">
@@ -25,11 +25,19 @@
                     </select>
                 </div>
 
-                {{-- 日付入力フィールド --}}
+                {{-- ★★★ 日付入力フィールドを月選択ドロップダウンに変更 ★★★ --}}
                 <div>
-                    <label for="search_date" class="block text-sm font-medium text-gray-700">実施日</label>
-                    <input type="date" id="search_date" name="search_date" value="{{ request('search_date') }}" class="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                    <label for="search_month" class="block text-sm font-medium text-gray-700">実施月</label>
+                    <select id="search_month" name="search_month" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="">全ての月</option>
+                        @for ($m = 1; $m <= 12; $m++)
+                            <option value="{{ $m }}" @selected(request('search_month') == $m)>
+                                {{ $m }}月
+                            </option>
+                        @endfor
+                    </select>
                 </div>
+                {{-- ★★★ ここまで変更 ★★★ --}}
 
                 {{-- 検索ボタン --}}
                 <div class="flex gap-2">
@@ -37,7 +45,8 @@
                         検索
                     </button>
                     {{-- 検索条件をクリアするボタン --}}
-                    @if(request('team_id') || request('search_date'))
+                    {{-- search_date の代わりに search_month に変更 --}}
+                    @if(request('team_id') || request('search_month'))
                         <a href="{{ route('games.index') }}" class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                             クリア
                         </a>
@@ -45,7 +54,7 @@
                 </div>
             </form>
         </div>
-        {{-- ★★★ ここまで検索フォームを追加 ★★★ --}}
+        {{-- ★★★ 検索フォームここまで ★★★ --}}
 
         @if($groupedGames->isEmpty())
             <p class="text-gray-600 text-center">表示できる試合がありません。</p>
