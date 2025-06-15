@@ -68,4 +68,19 @@ class Team extends Model
         return $this->hasMany(YearlyTeamStat::class);
     }
 
+   /**
+     * Get the team's nickname.
+     * このアクセサにより、データベースの 'team_nickname' カラムを
+     * モデルの 'nickname' 属性としてアクセスできるようになります。
+     * 例: $team->nickname
+     *
+     * @return string|null
+     */
+    public function getNicknameAttribute(): ?string
+    {
+        // attributes配列から'team_nickname'キーの値を取得します。
+        // nullの場合に備えてnull合体演算子を使用しています。
+        return $this->attributes['team_nickname'] ?? null;
+    }
+
 }

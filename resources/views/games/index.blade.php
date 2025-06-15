@@ -37,9 +37,6 @@
                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         結果
                                     </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        詳細
-                                    </th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
@@ -53,11 +50,13 @@
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                             {{ $game->stadium ?? '-' }}
                                         </td>
+                                        {{-- ★★★ ここをteam_nameからnicknameに変更 ★★★ --}}
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ $game->homeTeam->team_name ?? '不明' }}
+                                            {{ $game->homeTeam->nickname ?? '不明' }}
                                         </td>
+                                        {{-- ★★★ ここをteam_nameからnicknameに変更 ★★★ --}}
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ $game->awayTeam->team_name ?? '不明' }}
+                                            {{ $game->awayTeam->nickname ?? '不明' }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                             @if($game->home_score !== null && $game->away_score !== null)
@@ -72,10 +71,10 @@
                                                 $resultTextColorClass = 'text-gray-700'; // デフォルト
 
                                                 if ($game->game_result === 'Home Win') {
-                                                    $displayResultText = ($game->homeTeam->team_name ?? 'ホームチーム') . 'の勝ち';
+                                                    $displayResultText = ($game->homeTeam->nickname ?? 'ホームチーム') . 'の勝ち';
                                                     $resultTextColorClass = 'text-green-700';
                                                 } elseif ($game->game_result === 'Away Win') {
-                                                    $displayResultText = ($game->awayTeam->team_name ?? 'アウェイチーム') . 'の勝ち';
+                                                    $displayResultText = ($game->awayTeam->nickname ?? 'アウェイチーム') . 'の勝ち';
                                                     $resultTextColorClass = 'text-blue-700'; // 青色に変更 (相手チームの勝ちなので)
                                                 } elseif ($game->game_result === '引き分け' || $game->game_result === 'Draw') {
                                                     $displayResultText = '引き分け';
@@ -84,15 +83,10 @@
                                                     $displayResultText = '不明';
                                                     $resultTextColorClass = 'text-gray-500';
                                                 }
-                                                // スコアと結果が矛盾する場合の「エラー」表示は削除しました。
-                                                // その代わり、チーム名を伴う勝ち表示に変更します。
                                             @endphp
                                             <span class="font-semibold {{ $resultTextColorClass }}">
                                                 {{ $displayResultText }}
                                             </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            詳細
                                         </td>
                                     </tr>
                                 @endforeach
