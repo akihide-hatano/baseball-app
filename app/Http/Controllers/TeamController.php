@@ -3,18 +3,45 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Team; // Teamモデルを忘れずにuseする
-use App\Models\Game;
+use App\Models\Team; // Teamモデルをuseする
+use App\Models\League; // Leagueモデルをuseに追加 ★追加★
+use App\Models\Game; // Gameモデルは既存のshowメソッドで使われています
 
 class TeamController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request) // ★★★ Request $request を引数に追加 ★★★
     {
-        $teams = Team::all(); // 全てのチームデータを取得
-        return view('teams.index', compact('teams')); // 'teams.index'ビューに'teams'変数を渡して表示
+        // チームの基本クエリ
+        $query = Team::with('league'); // リーグ情報をEagerロード ★変更★
+
+        // ★★★ ここから検索条件を追加 ★★★
+
+        // リーグIDによるフィルタリング
+        if ($request->filled('league_id')) {
+            $query->where('league_id', $request->input('league_id'));
+        }
+
+        // チーム名によるフリーワード検索
+        if ($request->filled('search_team_name')) {
+            $searchTerm = '%' . $request->input('search_team_name') . '%'; // 部分一致検索のため%を追加
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('team_name', 'like', $searchTerm)
+                  ->orWhere('team_nickname', 'like', $searchTerm); // ニックネームでも検索
+            });
+        }
+
+        // ★★★ ここまで検索条件を追加 ★★★
+
+        // フィルタリングされたチームデータを取得
+        $teams = $query->orderBy('team_name')->get(); // 必要に応じてソート順を変更
+
+        // ★★★ 全てのリーグデータを取得し、ビューに渡す ★★★
+        $leagues = League::all();
+
+        return view('teams.index', compact('teams', 'leagues')); // ★'leagues'変数をビューに渡す ★変更★
     }
 
     /**
@@ -22,8 +49,9 @@ class TeamController extends Controller
      */
     public function create()
     {
-        // ここに新規作成フォームを表示するロジックを記述
-        return "チーム作成フォーム";
+        // チーム作成フォームを表示するために、リーグ選択肢が必要な場合
+        $leagues = League::all();
+        return view('teams.create', compact('leagues'));
     }
 
     /**
@@ -31,16 +59,27 @@ class TeamController extends Controller
      */
     public function store(Request $request)
     {
-        // ここにフォームから送信されたデータを検証・保存するロジックを記述
-        return "新しいチームを保存しました";
+        // バリデーションルール
+        $request->validate([
+            'league_id' => 'required|exists:leagues,id', // リーグIDのバリデーションを追加
+            'team_name' => 'required|string|max:255|unique:teams,team_name',
+            'team_nickname' => 'required|string|max:255|unique:teams,team_nickname',
+            'location' => 'required|string|max:255',
+            'founded_at' => 'required|date',
+        ]);
+
+        Team::create($request->all());
+
+        return redirect()->route('teams.index')->with('success', 'チームが正常に登録されました！');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show($id) // ★引数を$idに変更★
+    public function show($id)
     {
-        $team = Team::find($id);
+        // Teamモデルにleagueリレーションが追加されている場合、ここでleagueをEagerロードできます。
+        $team = Team::with('league')->find($id); // ★'league'をEagerロードに追加★
 
         // もし $team が取得できなかった場合（nullの場合）のハンドリング
         if (!$team) {
@@ -67,9 +106,6 @@ class TeamController extends Controller
             return $game->game_date . ' ' . $game->game_time; // 日付と時刻で複合ソート
         })->take(10); // 直近10試合
 
-        // ★ここを追加: ddで$recentGamesの中身を確認★
-        // dd($recentGames);
-
         // ビューにデータを渡す
         return view('teams.show', compact('team', 'recentGames'));
     }
@@ -77,25 +113,35 @@ class TeamController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Team $team) // Route Model Bindingを活用
+    public function edit(Team $team)
     {
-        // ここに編集フォームを表示するロジックを記述
-        return "チーム編集フォーム (ID: {$team->id})";
+        // 編集フォームを表示するために、リーグ選択肢が必要な場合
+        $leagues = League::all();
+        return view('teams.edit', compact('team', 'leagues'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Team $team) // Route Model Bindingを活用
+    public function update(Request $request, Team $team)
     {
-        // ここにフォームから送信されたデータでチームを更新するロジックを記述
-        return "チーム (ID: {$team->id}) を更新しました";
+        $request->validate([
+            'league_id' => 'required|exists:leagues,id', // リーグIDのバリデーションを追加
+            'team_name' => 'required|string|max:255|unique:teams,team_name,' . $team->id,
+            'team_nickname' => 'required|string|max:255|unique:teams,team_nickname,' . $team->id,
+            'location' => 'required|string|max:255',
+            'founded_at' => 'required|date',
+        ]);
+
+        $team->update($request->all());
+
+        return redirect()->route('teams.index')->with('success', 'チーム情報が更新されました！');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Team $team) // Route Model Bindingを活用
+    public function destroy(Team $team)
     {
         $team->delete(); // チームを削除
         return redirect()->route('teams.index')->with('success', 'チームが削除されました！');
