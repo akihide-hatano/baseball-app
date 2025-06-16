@@ -22,6 +22,10 @@ class Player extends Model
         'hometown',
     ];
 
+    protected $casts =[
+        'date_of_birth' => 'date',
+    ];
+
     /**
      * この選手が現在所属するチームを取得
      */
@@ -62,7 +66,7 @@ class Player extends Model
         return $this->hasMany(PlayerPitchingAbility::class);
     }
 
-   /**
+    /**
      * (YearlyBattingStat モデルへのリレーション) ★ここを確実に追加・修正★
      */
     public function yearlyBattingStats()
@@ -70,7 +74,7 @@ class Player extends Model
         return $this->hasMany(YearlyBattingStat::class, 'player_id');
     }
 
-   /**
+    /**
      * (YearlyBattingStat モデルへのリレーション) ★ここを確実に追加・修正★
      */
     public function yearlyPitchingStats()

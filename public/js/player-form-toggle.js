@@ -1,7 +1,10 @@
 document.addEventListener('DOMContentLoaded', function () {
+
     const roleSelect = document.getElementById('role');
     const battingFields = document.getElementById('batting-stats-fields');
     const pitchingFields = document.getElementById('pitching-stats-fields');
+    const playerForm = document.getElementById('playerCreationForm');
+
 
     function toggleStatsFields() {
         if (roleSelect.value === '野手') {
@@ -43,5 +46,17 @@ document.addEventListener('DOMContentLoaded', function () {
     toggleStatsFields();
 
     // 役割選択が変更されたときに切り替え
-    roleSelect.addEventListener('change', toggleStatsFields);
+    if (roleSelect) {
+        roleSelect.addEventListener('change', toggleStatsFields);
+    }
+
+
+    // フォーム送信時の確認のダイアログ
+    if (playerForm) {
+        playerForm.addEventListener('submit', (e) => {
+            if (!confirm('選手を登録してもよろしいですか？')) {
+                e.preventDefault();
+            }
+        });
+    }
 });

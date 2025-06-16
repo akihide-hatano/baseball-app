@@ -24,20 +24,24 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // R: Read (一覧表示) - 通常、最も一般的なルートなので先頭に配置されることが多いですが、
-    Route::get('/players', [PlayerController::class, 'index'])->name('players.index');
-    // C: Create (新規作成フォーム表示)
+ // 1. 固定パスを持つルートや、最も具体的なアクションを先に配置
     Route::get('/players/create', [PlayerController::class, 'create'])->name('players.create');
-    // C: Create (データ保存処理) - POST メソッドを使用
     Route::post('/players', [PlayerController::class, 'store'])->name('players.store');
-    // U: Update (編集フォーム表示)
-    Route::get('/players/{player}/edit', [PlayerController::class, 'edit'])->name('players.edit'); // ★ 追加/修正 ★
-    // U: Update (データ更新処理) - PATCH メソッドを使用
-    Route::patch('/players/{player}', [PlayerController::class, 'update'])->name('players.update'); // ★ 追加 ★
-    // D: Delete (データ削除処理) - DELETE メソッドを使用
-    Route::delete('/players/{player}', [PlayerController::class, 'destroy'])->name('players.destroy'); // ★ 追加 ★
-    // R: Read (詳細表示) - 最も一般的な動的ルートなので、他の具体的な動的ルートの後に定義
-    Route::get('/players/{player}', [PlayerController::class, 'show'])->name('players.show'); // ★ {id} から {player} に変更 ★
+
+    // 2. IDを含む動的なパスの中でも、より具体的なアクション（editなど）を配置
+    Route::get('/players/{player}/edit', [PlayerController::class, 'edit'])->name('players.edit');
+
+    // 3. IDを含む動的なパスで、特定のHTTPメソッドを持つアクションを配置 (GET以外)
+    Route::patch('/players/{player}', [PlayerController::class, 'update'])->name('players.update');
+    Route::delete('/players/{player}', [PlayerController::class, 'destroy'])->name('players.destroy');
+
+    // 4. IDを含む動的なパスで、最も一般的な表示アクション (show) を最後に配置
+    Route::get('/players/{player}', [PlayerController::class, 'show'])->name('players.show');
+
+    // 5. IDを含まない一般的な一覧表示ルートを、最後に配置することも可能ですが、
+    // 通常は /players/{player} よりも手前に置く方が自然な場合が多いです。
+    // 今回は create, store の後に置いていますが、index は /players/{player} よりも前にあれば問題ありません。
+    Route::get('/players', [PlayerController::class, 'index'])->name('players.index');
 
 
     // チーム関連のルート (既存のまま。これは正しく並んでいます)
