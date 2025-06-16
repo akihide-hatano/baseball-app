@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request; // Illuminate\Http\Request をuseに追加
+use Illuminate\Http\Request;
 use App\Models\Game;
 use App\Models\Team;
-use Carbon\Carbon;
-use App\Models\GamePlayerStat;
+use App\Models\Player; // 選手モデルを追加 (MVPや勝利投手選択用など)
+use App\Models\GamePlayerStat; // GamePlayerStat モデルも必要に応じて
+use Carbon\Carbon; // Carbon をuseに追加
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
 
 class GameController extends Controller
 {
@@ -101,7 +105,9 @@ class GameController extends Controller
      */
     public function edit(Game $game)
     {
-        return "試合編集フォーム (ID: {$game->id}) (未実装)";
+        $teams = Team::all();
+        $players = Player::all();
+        return view('games.edit', compact('game', 'teams', 'players'));
     }
 
     /**
@@ -109,7 +115,55 @@ class GameController extends Controller
      */
     public function update(Request $request, Game $game)
     {
-        return "試合 (ID: {$game->id}) を更新しました (未実装)";
+// バリデーションルールを定義
+        $validatedData = $request->validate([
+            'home_team_id' => 'required|exists:teams,id',
+            'away_team_id' => 'required|exists:teams,id|different:home_team_id',
+            'game_date' => 'required|date',
+            'game_time' => 'required|date_format:H:i',
+            'stadium' => 'required|string|max:255',
+            'home_score' => 'nullable|integer|min:0',
+            'away_score' => 'nullable|integer|min:0',
+            'mvp_player_id' => 'nullable|exists:players,id',
+            'pitcher_of_record_id' => 'nullable|exists:players,id',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // スコアが入力されている場合に結果を決定、そうでなければnull
+            $gameResult = null;
+            if (isset($validatedData['home_score']) && isset($validatedData['away_score'])) {
+                if ($validatedData['home_score'] > $validatedData['away_score']) {
+                    $gameResult = 'Win';
+                } elseif ($validatedData['home_score'] < $validatedData['away_score']) {
+                    $gameResult = 'Loss';
+                } else {
+                    $gameResult = 'Draw';
+                }
+            }
+
+            $game->update([
+                'home_team_id' => $validatedData['home_team_id'],
+                'away_team_id' => $validatedData['away_team_id'],
+                'game_date' => $validatedData['game_date'],
+                'game_time' => $validatedData['game_time'],
+                'stadium' => $validatedData['stadium'],
+                'home_score' => $validatedData['home_score'],
+                'away_score' => $validatedData['away_score'],
+                'game_result' => $gameResult, // ここを game_result に
+                'mvp_player_id' => $validatedData['mvp_player_id'] ?? null,
+                'pitcher_of_record_id' => $validatedData['pitcher_of_record_id'] ?? null,
+            ]);
+
+            DB::commit();
+            return redirect()->route('games.show', $game->id)
+                             ->with('success', '試合情報が更新されました！');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("試合更新エラー: " . $e->getMessage());
+            return back()->withInput()->withErrors(['error' => '試合の更新中にエラーが発生しました: ' . $e->getMessage()]);
+        }
     }
 
     /**
