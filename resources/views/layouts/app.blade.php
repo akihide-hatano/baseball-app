@@ -28,7 +28,5 @@
                 {{ $slot }}
             </main>
         </div>
-        {{-- ★★★ ここに @stack('scripts') を追加します ★★★ --}}
-        @stack('scripts')
     </body>
 </html>
