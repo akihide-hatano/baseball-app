@@ -11,8 +11,9 @@ class YearlyBattingStat extends Model
 
     protected $fillable = [
         'year',
-        'league_id', // どのリーグの統計か
-        'team_id',   // どのチームの統計か (null許容でリーグ全体も表現可能)
+         'player_id', // ★★★ 追加: player_id を $fillable に含める ★★★
+        // 'league_id', // どのリーグの統計か
+        // 'team_id',   // どのチームの統計か (null許容でリーグ全体も表現可能)
 
         'total_games_played',
         'total_at_bats',

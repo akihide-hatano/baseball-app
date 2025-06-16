@@ -35,9 +35,42 @@
                         </div>
 
                         <div class="mb-4">
-                            <x-input-label for="birth_date" :value="__('生年月日')" />
-                            <x-text-input id="birth_date" class="block mt-1 w-full" type="date" name="birth_date" :value="old('birth_date')" />
-                            <x-input-error :messages="$errors->get('birth_date')" class="mt-2" />
+                            <x-input-label for="date_of_birth" :value="__('生年月日')" />
+                            {{-- ★ name属性とid属性を 'date_of_birth' に変更、:messagesも変更 ★ --}}
+                            <x-text-input id="date_of_birth" class="block mt-1 w-full" type="date" name="date_of_birth" :value="old('date_of_birth')" />
+                            <x-input-error :messages="$errors->get('date_of_birth')" class="mt-2" />
+                        </div>
+
+                        {{-- 新しいカラムの入力フィールド (必要に応じて追加) --}}
+                        {{-- マイグレーションでnullableなので、入力は必須ではありません --}}
+                        <div class="mb-4">
+                            <x-input-label for="height" :value="__('身長 (cm)')" />
+                            <x-text-input id="height" class="block mt-1 w-full" type="number" name="height" :value="old('height')" />
+                            <x-input-error :messages="$errors->get('height')" class="mt-2" />
+                        </div>
+
+                        <div class="mb-4">
+                            <x-input-label for="weight" :value="__('体重 (kg)')" />
+                            <x-text-input id="weight" class="block mt-1 w-full" type="number" name="weight" :value="old('weight')" />
+                            <x-input-error :messages="$errors->get('weight')" class="mt-2" />
+                        </div>
+
+                        <div class="mb-4">
+                            <x-input-label for="specialty" :value="__('特技/特徴')" />
+                            <x-text-input id="specialty" class="block mt-1 w-full" type="text" name="specialty" :value="old('specialty')" />
+                            <x-input-error :messages="$errors->get('specialty')" class="mt-2" />
+                        </div>
+
+                        <div class="mb-4">
+                            <x-input-label for="description" :value="__('選手説明')" />
+                            <textarea id="description" name="description" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">{{ old('description') }}</textarea>
+                            <x-input-error :messages="$errors->get('description')" class="mt-2" />
+                        </div>
+
+                        <div class="mb-4">
+                            <x-input-label for="hometown" :value="__('出身地')" />
+                            <x-text-input id="hometown" class="block mt-1 w-full" type="text" name="hometown" :value="old('hometown')" />
+                            <x-input-error :messages="$errors->get('hometown')" class="mt-2" />
                         </div>
 
                         <div class="mb-4">

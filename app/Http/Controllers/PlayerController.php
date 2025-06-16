@@ -7,10 +7,10 @@ use App\Models\Player;
 use App\Models\Team;
 use App\Models\YearlyBattingStat;
 use App\Models\YearlyPitchingStat;
-use App\Models\PlayerBattingAbility; // PlayerBattingAbility も使われているのでuseに追加
-use App\Models\PlayerPitchingAbility; // PlayerPitchingAbility も使われているのでuseに追加
+use App\Models\PlayerBattingAbility;
+use App\Models\PlayerPitchingAbility;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log; // エラーログのために追加
+use Illuminate\Support\Facades\Log;
 
 class PlayerController extends Controller
 {
@@ -61,11 +61,18 @@ class PlayerController extends Controller
         // 共通のバリデーションルール
         $rules = [
             'team_id' => 'required|exists:teams,id',
-            'player_name' => 'required|string|max:255',
+            'player_name' => 'required|string|max:255', // ★ フォームのnameは 'player_name' のままなので、バリデーションはこれでOK
             'role' => 'required|in:野手,投手',
+            // jersey_number の unique 制約は team_id と組み合わせる必要があります
             'jersey_number' => 'nullable|integer|min:0|unique:players,jersey_number,NULL,id,team_id,' . $request->input('team_id'),
-            'birth_date' => 'nullable|date',
+            'date_of_birth' => 'nullable|date', // ★ フォームのnameは 'date_of_birth' に合わせてバリデーションも修正 ★
             'year' => 'required|integer|min:1900|max:' . (date('Y') + 1), // 成績の年度
+            // ★ 新しいカラムのバリデーションルールを追加 ★
+            'height' => 'nullable|integer|min:0',
+            'weight' => 'nullable|integer|min:0',
+            'specialty' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:1000', // descriptionは長くなる可能性があるのでmaxを増やしました
+            'hometown' => 'nullable|string|max:255',
         ];
 
         // 役割に応じた追加のバリデーションルール
@@ -115,11 +122,19 @@ class PlayerController extends Controller
             // 選手データを保存
             $player = Player::create([
                 'team_id' => $validatedData['team_id'],
-                'player_name' => $validatedData['player_name'],
+                'name' => $validatedData['player_name'], // ★ DBのカラム名 'name' に合わせて修正 ★
                 'role' => $validatedData['role'],
                 'jersey_number' => $validatedData['jersey_number'],
-                'birth_date' => $validatedData['birth_date'],
+                'date_of_birth' => $validatedData['date_of_birth'], // ★ DBのカラム名 'date_of_birth' に合わせて修正 ★
+                'height' => $validatedData['height'] ?? null,       // ★ 新しいカラムを追加 ★
+                'weight' => $validatedData['weight'] ?? null,       // ★ 新しいカラムを追加 ★
+                'specialty' => $validatedData['specialty'] ?? null, // ★ 新しいカラムを追加 ★
+                'description' => $validatedData['description'] ?? null, // ★ 新しいカラムを追加 ★
+                'hometown' => $validatedData['hometown'] ?? null,   // ★ 新しいカラムを追加 ★
             ]);
+
+            // // ★★★ ここにddを追加 ★★★
+            // dd($player, $player->id);
 
             // 役割に応じて成績データを保存
             if ($player->role === '野手') {
@@ -356,12 +371,18 @@ class PlayerController extends Controller
         // 共通のバリデーションルール
         $rules = [
             'team_id' => 'required|exists:teams,id',
-            'player_name' => 'required|string|max:255',
+            'player_name' => 'required|string|max:255', // ★ フォームのnameは 'player_name' のままなので、バリデーションはこれでOK
             'role' => 'required|in:野手,投手',
             // 更新時のユニークルールは、自分自身のIDを除外する必要がある
             'jersey_number' => 'nullable|integer|min:0|unique:players,jersey_number,' . $player->id . ',id,team_id,' . $request->input('team_id'),
-            'birth_date' => 'nullable|date',
+            'date_of_birth' => 'nullable|date', // ★ フォームのnameは 'date_of_birth' に合わせてバリデーションも修正 ★
             'year' => 'required|integer|min:1900|max:' . (date('Y') + 1), // 成績の年度
+            // ★ 新しいカラムのバリデーションルールを追加 ★
+            'height' => 'nullable|integer|min:0',
+            'weight' => 'nullable|integer|min:0',
+            'specialty' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:1000', // descriptionは長くなる可能性があるのでmaxを増やしました
+            'hometown' => 'nullable|string|max:255',
         ];
 
         // 役割に応じた追加のバリデーションルール
@@ -410,10 +431,15 @@ class PlayerController extends Controller
             // 選手データを更新
             $player->update([
                 'team_id' => $validatedData['team_id'],
-                'player_name' => $validatedData['player_name'],
+                'name' => $validatedData['player_name'], // ★ DBのカラム名 'name' に合わせて修正 ★
                 'role' => $validatedData['role'],
                 'jersey_number' => $validatedData['jersey_number'],
-                'birth_date' => $validatedData['birth_date'],
+                'date_of_birth' => $validatedData['date_of_birth'], // ★ DBのカラム名 'date_of_birth' に合わせて修正 ★
+                'height' => $validatedData['height'] ?? $player->height, // ★ 新しいカラムを追加 (既存値も考慮) ★
+                'weight' => $validatedData['weight'] ?? $player->weight, // ★ 新しいカラムを追加 (既存値も考慮) ★
+                'specialty' => $validatedData['specialty'] ?? $player->specialty, // ★ 新しいカラムを追加 (既存値も考慮) ★
+                'description' => $validatedData['description'] ?? $player->description, // ★ 新しいカラムを追加 (既存値も考慮) ★
+                'hometown' => $validatedData['hometown'] ?? $player->hometown,   // ★ 新しいカラムを追加 (既存値も考慮) ★
             ]);
 
             // 年度の成績を更新または新規作成
