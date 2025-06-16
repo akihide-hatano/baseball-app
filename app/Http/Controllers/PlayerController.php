@@ -42,12 +42,7 @@ class PlayerController extends Controller
             '野手' => '野手',
             '投手' => '投手',
         ];
-        // フォームで表示する現在の年度を設定
         $currentYear = date('Y');
-
-        // ★★★ createメソッドでのdd確認 ★★★
-        // ビューに渡されるデータが正しいかを確認
-        // dd(compact('teams', 'playerRoles', 'currentYear'));
 
         return view('players.create', compact('teams', 'playerRoles', 'currentYear'));
     }
@@ -61,26 +56,24 @@ class PlayerController extends Controller
         // 共通のバリデーションルール
         $rules = [
             'team_id' => 'required|exists:teams,id',
-            'player_name' => 'required|string|max:255', // ★ フォームのnameは 'player_name' のままなので、バリデーションはこれでOK
+            'player_name' => 'required|string|max:255',
             'role' => 'required|in:野手,投手',
-            // jersey_number の unique 制約は team_id と組み合わせる必要があります
             'jersey_number' => 'nullable|integer|min:0|unique:players,jersey_number,NULL,id,team_id,' . $request->input('team_id'),
-            'date_of_birth' => 'nullable|date', // ★ フォームのnameは 'date_of_birth' に合わせてバリデーションも修正 ★
+            'date_of_birth' => 'nullable|date', // bladeとmigrationに合わせる
+            'height' => 'nullable|integer|min:0', // 新しいカラムのバリデーション
+            'weight' => 'nullable|integer|min:0', // 新しいカラムのバリデーション
+            'specialty' => 'nullable|string|max:255', // 新しいカラムのバリデーション
+            'description' => 'nullable|string|max:1000', // 新しいカラムのバリデーション
+            'hometown' => 'nullable|string|max:255', // 新しいカラムのバリデーション
             'year' => 'required|integer|min:1900|max:' . (date('Y') + 1), // 成績の年度
-            // ★ 新しいカラムのバリデーションルールを追加 ★
-            'height' => 'nullable|integer|min:0',
-            'weight' => 'nullable|integer|min:0',
-            'specialty' => 'nullable|string|max:255',
-            'description' => 'nullable|string|max:1000', // descriptionは長くなる可能性があるのでmaxを増やしました
-            'hometown' => 'nullable|string|max:255',
         ];
 
-        // 役割に応じた追加のバリデーションルール
+        // 役割に応じた追加のバリデーションルール (フォームのname属性に合わせる)
         if ($request->input('role') === '野手') {
             $rules = array_merge($rules, [
-                'batting_games' => 'nullable|integer|min:0',
+                'games' => 'nullable|integer|min:0', // bladeのname属性に合わせる
+                'plate_appearances' => 'nullable|integer|min:0', // bladeのname属性に合わせる
                 'at_bats' => 'nullable|integer|min:0',
-                'runs' => 'nullable|integer|min:0',
                 'hits' => 'nullable|integer|min:0',
                 'doubles' => 'nullable|integer|min:0',
                 'triples' => 'nullable|integer|min:0',
@@ -88,15 +81,25 @@ class PlayerController extends Controller
                 'rbi' => 'nullable|integer|min:0',
                 'stolen_bases' => 'nullable|integer|min:0',
                 'caught_stealing' => 'nullable|integer|min:0',
-                'walks' => 'nullable|integer|min:0',
                 'strikeouts' => 'nullable|integer|min:0',
-                'sacrifice_hits' => 'nullable|integer|min:0',
-                'sacrifice_flies' => 'nullable|integer|min:0',
-                'batting_average' => 'nullable|numeric|min:0|max:1', // 打率 0.000から1.000
+                'walks' => 'nullable|integer|min:0',
+                'hit_by_pitch' => 'nullable|integer|min:0', // bladeのname属性に合わせる
+                'sac_bunts' => 'nullable|integer|min:0', // bladeのname属性に合わせる
+                'sac_flies' => 'nullable|integer|min:0',
+                'double_plays' => 'nullable|integer|min:0', // bladeのname属性に合わせる
+                'errors' => 'nullable|integer|min:0',       // bladeのname属性に合わせる
+                'runs_scored' => 'nullable|integer|min:0',  // bladeのname属性に合わせる
+                'batting_average' => 'nullable|numeric|min:0|max:1',
+                'on_base_percentage' => 'nullable|numeric|min:0|max:1', // bladeのname属性に合わせる
+                'slugging_percentage' => 'nullable|numeric|min:0|max:1',// bladeのname属性に合わせる
+                'ops' => 'nullable|numeric|min:0|max:2', // OPSは1を超える可能性があるのでmaxを2などに
+                'ops_plus' => 'nullable|numeric',
+                'wrc_plus' => 'nullable|numeric',
             ]);
         } elseif ($request->input('role') === '投手') {
             $rules = array_merge($rules, [
-                'pitching_games' => 'nullable|integer|min:0',
+                // 投手成績のバリデーションルール (もしあれば)
+                'pitching_games' => 'nullable|integer|min:0', // Bladeとコントローラーで使用している名前に合わせる
                 'wins' => 'nullable|integer|min:0',
                 'losses' => 'nullable|integer|min:0',
                 'saves' => 'nullable|integer|min:0',
@@ -106,93 +109,98 @@ class PlayerController extends Controller
                 'home_runs_given' => 'nullable|integer|min:0',
                 'walks_given' => 'nullable|integer|min:0',
                 'strikeouts_thrown' => 'nullable|integer|min:0',
-                'earned_run_average' => 'nullable|numeric|min:0', // 防御率
+                'earned_run_average' => 'nullable|numeric|min:0',
             ]);
         }
 
         $validatedData = $request->validate($rules);
 
-        // ★★★ storeメソッドでのdd確認 ★★★
-        // フォームから送信されたデータが正しくバリデーションされているか確認
-        // dd($validatedData, $request->all());
+        // dd($validatedData, $request->all()); // データ確認用のdd()はコメントアウトまたは削除
 
-        // トランザクションを開始 (選手と成績をまとめて保存するため)
         DB::beginTransaction();
         try {
             // 選手データを保存
             $player = Player::create([
                 'team_id' => $validatedData['team_id'],
-                'name' => $validatedData['player_name'], // ★ DBのカラム名 'name' に合わせて修正 ★
+                'name' => $validatedData['player_name'], // DBカラム名 'name' にマッピング
                 'role' => $validatedData['role'],
                 'jersey_number' => $validatedData['jersey_number'],
-                'date_of_birth' => $validatedData['date_of_birth'], // ★ DBのカラム名 'date_of_birth' に合わせて修正 ★
-                'height' => $validatedData['height'] ?? null,       // ★ 新しいカラムを追加 ★
-                'weight' => $validatedData['weight'] ?? null,       // ★ 新しいカラムを追加 ★
-                'specialty' => $validatedData['specialty'] ?? null, // ★ 新しいカラムを追加 ★
-                'description' => $validatedData['description'] ?? null, // ★ 新しいカラムを追加 ★
-                'hometown' => $validatedData['hometown'] ?? null,   // ★ 新しいカラムを追加 ★
+                'date_of_birth' => $validatedData['date_of_birth'], // DBカラム名 'date_of_birth' にマッピング
+                'height' => $validatedData['height'] ?? null,
+                'weight' => $validatedData['weight'] ?? null,
+                'specialty' => $validatedData['specialty'] ?? null,
+                'description' => $validatedData['description'] ?? null,
+                'hometown' => $validatedData['hometown'] ?? null,
             ]);
-
-            // // ★★★ ここにddを追加 ★★★
-            // dd($player, $player->id);
 
             // 役割に応じて成績データを保存
             if ($player->role === '野手') {
                 YearlyBattingStat::create([
                     'player_id' => $player->id,
                     'year' => $validatedData['year'],
-                    'games' => $validatedData['batting_games'] ?? null,
-                    'at_bats' => $validatedData['at_bats'] ?? null,
-                    'runs' => $validatedData['runs'] ?? null,
-                    'hits' => $validatedData['hits'] ?? null,
-                    'doubles' => $validatedData['doubles'] ?? null,
-                    'triples' => $validatedData['triples'] ?? null,
-                    'home_runs' => $validatedData['home_runs'] ?? null,
-                    'rbi' => $validatedData['rbi'] ?? null,
-                    'stolen_bases' => $validatedData['stolen_bases'] ?? null,
-                    'caught_stealing' => $validatedData['caught_stealing'] ?? null,
-                    'walks' => $validatedData['walks'] ?? null,
-                    'strikeouts' => $validatedData['strikeouts'] ?? null,
-                    'sacrifice_hits' => $validatedData['sacrifice_hits'] ?? null,
-                    'sacrifice_flies' => $validatedData['sacrifice_flies'] ?? null,
-                    'batting_average' => $validatedData['batting_average'] ?? null,
+                    'team_id' => $validatedData['team_id'], // team_id も成績テーブルに保存
+                    // ★★★ ここをDBカラム名に正確にマッピングする ★★★
+                    'games' => $validatedData['games'] ?? 0,
+                    'plate_appearances' => $validatedData['plate_appearances'] ?? 0,
+                    'at_bats' => $validatedData['at_bats'] ?? 0,
+                    'hits' => $validatedData['hits'] ?? 0,
+                    'doubles' => $validatedData['doubles'] ?? 0,
+                    'triples' => $validatedData['triples'] ?? 0,
+                    'home_runs' => $validatedData['home_runs'] ?? 0,
+                    'rbi' => $validatedData['rbi'] ?? 0,
+                    'stolen_bases' => $validatedData['stolen_bases'] ?? 0,
+                    'caught_stealing' => $validatedData['caught_stealing'] ?? 0,
+                    'strikeouts' => $validatedData['strikeouts'] ?? 0,
+                    'walks' => $validatedData['walks'] ?? 0,
+                    'hit_by_pitch' => $validatedData['hit_by_pitch'] ?? 0,
+                    'sac_bunts' => $validatedData['sac_bunts'] ?? 0, // フォーム名は sacrifice_hits
+                    'sac_flies' => $validatedData['sac_flies'] ?? 0,
+                    'double_plays' => $validatedData['double_plays'] ?? 0,
+                    'errors' => $validatedData['errors'] ?? 0,
+                    'runs_scored' => $validatedData['runs_scored'] ?? 0, // フォーム名は runs
+                    'batting_average' => $validatedData['batting_average'] ?? 0.000,
+                    'on_base_percentage' => $validatedData['on_base_percentage'] ?? 0.000,
+                    'slugging_percentage' => $validatedData['slugging_percentage'] ?? 0.000,
+                    'ops' => $validatedData['ops'] ?? 0.000,
+                    'ops_plus' => $validatedData['ops_plus'] ?? null,
+                    'wrc_plus' => $validatedData['wrc_plus'] ?? null,
                 ]);
             } elseif ($player->role === '投手') {
                 YearlyPitchingStat::create([
                     'player_id' => $player->id,
                     'year' => $validatedData['year'],
-                    'games' => $validatedData['pitching_games'] ?? null,
-                    'wins' => $validatedData['wins'] ?? null,
-                    'losses' => $validatedData['losses'] ?? null,
-                    'saves' => $validatedData['saves'] ?? null,
-                    'holds' => $validatedData['holds'] ?? null,
-                    'innings_pitched_out' => $validatedData['innings_pitched_out'] ?? null,
-                    'hits_given' => $validatedData['hits_given'] ?? null,
-                    'home_runs_given' => $validatedData['home_runs_given'] ?? null,
-                    'walks_given' => $validatedData['walks_given'] ?? null,
-                    'strikeouts_thrown' => $validatedData['strikeouts_thrown'] ?? null,
-                    'earned_run_average' => $validatedData['earned_run_average'] ?? null,
+                    'team_id' => $validatedData['team_id'], // team_id も成績テーブルに保存
+
+                    // ★★★ ここもDBカラム名に正確にマッピングする ★★★
+                    'games' => $validatedData['pitching_games'] ?? 0, // ここはDBカラム名とBladeのnameが同じと仮定
+                    'wins' => $validatedData['wins'] ?? 0,
+                    'losses' => $validatedData['losses'] ?? 0,
+                    'saves' => $validatedData['saves'] ?? 0,
+                    'holds' => $validatedData['holds'] ?? 0,
+                    'innings_pitched_out' => $validatedData['innings_pitched_out'] ?? 0,
+                    'hits_given' => $validatedData['hits_given'] ?? 0,
+                    'home_runs_given' => $validatedData['home_runs_given'] ?? 0,
+                    'walks_given' => $validatedData['walks_given'] ?? 0,
+                    'strikeouts_thrown' => $validatedData['strikeouts_thrown'] ?? 0,
+                    'earned_run_average' => $validatedData['earned_run_average'] ?? 0.00,
                 ]);
             }
 
-            DB::commit(); // 全ての処理が成功したらコミット
+            DB::commit();
             return redirect()->route('players.index')->with('success', '新しい選手と成績が正常に登録されました！');
 
         } catch (\Exception $e) {
-            DB::rollBack(); // エラーが発生したらロールバック
-            Log::error("選手登録エラー: " . $e->getMessage()); // エラーログ出力
+            DB::rollBack();
+            Log::error("選手登録エラー: " . $e->getMessage());
             return back()->withInput()->withErrors(['error' => '選手の登録中にエラーが発生しました: ' . $e->getMessage()]);
         }
     }
 
     /**
      * Display the specified resource.
-     * Route Model Binding を使用して Player インスタンスを直接受け取ります。
      */
     public function show(Player $player)
     {
-        // $player は既に自動的に取得されているため、Player::find($id) は不要です。
-        // 関連するデータをEager Loadします
         $player->load([
             'team',
             'yearlyBattingStats' => function ($query) {
@@ -209,11 +217,6 @@ class PlayerController extends Controller
             }
         ]);
 
-        // ★★★ showメソッドでのdd確認 ★★★
-        // Route Model Bindingで取得された選手オブジェクトと、Eager Loadingされた関連データを確認
-        // dd($player);
-
-        // その他のデータ整形ロジックは既存のものを維持
         $playerBattingAbilitiesData = null;
         $playerOverallRankData = null;
         $latestBattingAbility = $player->battingAbilities->first();
@@ -344,7 +347,6 @@ class PlayerController extends Controller
             '野手' => '野手',
             '投手' => '投手',
         ];
-        // 編集対象の選手とその関連データ（最新の成績）をロード
         $player->load([
             'yearlyBattingStats' => function ($query) {
                 $query->orderBy('year', 'desc');
@@ -353,11 +355,7 @@ class PlayerController extends Controller
                 $query->orderBy('year', 'desc');
             }
         ]);
-        $currentYear = date('Y'); // 現在の年度をフォームのデフォルトとして渡す
-
-        // ★★★ editメソッドでのdd確認 ★★★
-        // 編集対象の選手オブジェクトと、ビューに渡されるデータを確認
-        // dd(compact('player', 'teams', 'playerRoles', 'currentYear'));
+        $currentYear = date('Y');
 
         return view('players.edit', compact('player', 'teams', 'playerRoles', 'currentYear'));
     }
@@ -371,26 +369,23 @@ class PlayerController extends Controller
         // 共通のバリデーションルール
         $rules = [
             'team_id' => 'required|exists:teams,id',
-            'player_name' => 'required|string|max:255', // ★ フォームのnameは 'player_name' のままなので、バリデーションはこれでOK
+            'player_name' => 'required|string|max:255',
             'role' => 'required|in:野手,投手',
-            // 更新時のユニークルールは、自分自身のIDを除外する必要がある
             'jersey_number' => 'nullable|integer|min:0|unique:players,jersey_number,' . $player->id . ',id,team_id,' . $request->input('team_id'),
-            'date_of_birth' => 'nullable|date', // ★ フォームのnameは 'date_of_birth' に合わせてバリデーションも修正 ★
-            'year' => 'required|integer|min:1900|max:' . (date('Y') + 1), // 成績の年度
-            // ★ 新しいカラムのバリデーションルールを追加 ★
+            'date_of_birth' => 'nullable|date',
             'height' => 'nullable|integer|min:0',
             'weight' => 'nullable|integer|min:0',
             'specialty' => 'nullable|string|max:255',
-            'description' => 'nullable|string|max:1000', // descriptionは長くなる可能性があるのでmaxを増やしました
+            'description' => 'nullable|string|max:1000',
             'hometown' => 'nullable|string|max:255',
+            'year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
         ];
 
-        // 役割に応じた追加のバリデーションルール
         if ($request->input('role') === '野手') {
             $rules = array_merge($rules, [
-                'batting_games' => 'nullable|integer|min:0',
+                'games' => 'nullable|integer|min:0',
+                'plate_appearances' => 'nullable|integer|min:0',
                 'at_bats' => 'nullable|integer|min:0',
-                'runs' => 'nullable|integer|min:0',
                 'hits' => 'nullable|integer|min:0',
                 'doubles' => 'nullable|integer|min:0',
                 'triples' => 'nullable|integer|min:0',
@@ -398,11 +393,20 @@ class PlayerController extends Controller
                 'rbi' => 'nullable|integer|min:0',
                 'stolen_bases' => 'nullable|integer|min:0',
                 'caught_stealing' => 'nullable|integer|min:0',
-                'walks' => 'nullable|integer|min:0',
                 'strikeouts' => 'nullable|integer|min:0',
-                'sacrifice_hits' => 'nullable|integer|min:0',
-                'sacrifice_flies' => 'nullable|integer|min:0',
+                'walks' => 'nullable|integer|min:0',
+                'hit_by_pitch' => 'nullable|integer|min:0',
+                'sac_bunts' => 'nullable|integer|min:0',
+                'sac_flies' => 'nullable|integer|min:0',
+                'double_plays' => 'nullable|integer|min:0',
+                'errors' => 'nullable|integer|min:0',
+                'runs_scored' => 'nullable|integer|min:0',
                 'batting_average' => 'nullable|numeric|min:0|max:1',
+                'on_base_percentage' => 'nullable|numeric|min:0|max:1',
+                'slugging_percentage' => 'nullable|numeric|min:0|max:1',
+                'ops' => 'nullable|numeric|min:0|max:2',
+                'ops_plus' => 'nullable|numeric',
+                'wrc_plus' => 'nullable|numeric',
             ]);
         } elseif ($request->input('role') === '投手') {
             $rules = array_merge($rules, [
@@ -422,24 +426,22 @@ class PlayerController extends Controller
 
         $validatedData = $request->validate($rules);
 
-        // ★★★ updateメソッドでのdd確認 ★★★
-        // 更新対象の選手オブジェクト、バリデーション後のデータ、元のリクエストデータを確認
-        // dd($player, $validatedData, $request->all());
+        // dd($player, $validatedData, $request->all()); // データ確認用のdd()はコメントアウトまたは削除
 
         DB::beginTransaction();
         try {
             // 選手データを更新
             $player->update([
                 'team_id' => $validatedData['team_id'],
-                'name' => $validatedData['player_name'], // ★ DBのカラム名 'name' に合わせて修正 ★
+                'name' => $validatedData['player_name'],
                 'role' => $validatedData['role'],
                 'jersey_number' => $validatedData['jersey_number'],
-                'date_of_birth' => $validatedData['date_of_birth'], // ★ DBのカラム名 'date_of_birth' に合わせて修正 ★
-                'height' => $validatedData['height'] ?? $player->height, // ★ 新しいカラムを追加 (既存値も考慮) ★
-                'weight' => $validatedData['weight'] ?? $player->weight, // ★ 新しいカラムを追加 (既存値も考慮) ★
-                'specialty' => $validatedData['specialty'] ?? $player->specialty, // ★ 新しいカラムを追加 (既存値も考慮) ★
-                'description' => $validatedData['description'] ?? $player->description, // ★ 新しいカラムを追加 (既存値も考慮) ★
-                'hometown' => $validatedData['hometown'] ?? $player->hometown,   // ★ 新しいカラムを追加 (既存値も考慮) ★
+                'date_of_birth' => $validatedData['date_of_birth'],
+                'height' => $validatedData['height'] ?? $player->height,
+                'weight' => $validatedData['weight'] ?? $player->weight,
+                'specialty' => $validatedData['specialty'] ?? $player->specialty,
+                'description' => $validatedData['description'] ?? $player->description,
+                'hometown' => $validatedData['hometown'] ?? $player->hometown,
             ]);
 
             // 年度の成績を更新または新規作成
@@ -447,24 +449,34 @@ class PlayerController extends Controller
                 YearlyBattingStat::updateOrCreate(
                     ['player_id' => $player->id, 'year' => $validatedData['year']],
                     [
-                        'games' => $validatedData['batting_games'] ?? null,
-                        'at_bats' => $validatedData['at_bats'] ?? null,
-                        'runs' => $validatedData['runs'] ?? null,
-                        'hits' => $validatedData['hits'] ?? null,
-                        'doubles' => $validatedData['doubles'] ?? null,
-                        'triples' => $validatedData['triples'] ?? null,
-                        'home_runs' => $validatedData['home_runs'] ?? null,
-                        'rbi' => $validatedData['rbi'] ?? null,
-                        'stolen_bases' => $validatedData['stolen_bases'] ?? null,
-                        'caught_stealing' => $validatedData['caught_stealing'] ?? null,
-                        'walks' => $validatedData['walks'] ?? null,
-                        'strikeouts' => $validatedData['strikeouts'] ?? null,
-                        'sacrifice_hits' => $validatedData['sacrifice_hits'] ?? null,
-                        'sacrifice_flies' => $validatedData['sacrifice_flies'] ?? null,
-                        'batting_average' => $validatedData['batting_average'] ?? null,
+                        'team_id' => $validatedData['team_id'], // team_id も成績テーブルに保存
+                        // ★★★ ここをDBカラム名に正確にマッピングする ★★★
+                        'games' => $validatedData['games'] ?? 0,
+                        'plate_appearances' => $validatedData['plate_appearances'] ?? 0,
+                        'at_bats' => $validatedData['at_bats'] ?? 0,
+                        'hits' => $validatedData['hits'] ?? 0,
+                        'doubles' => $validatedData['doubles'] ?? 0,
+                        'triples' => $validatedData['triples'] ?? 0,
+                        'home_runs' => $validatedData['home_runs'] ?? 0,
+                        'rbi' => $validatedData['rbi'] ?? 0,
+                        'stolen_bases' => $validatedData['stolen_bases'] ?? 0,
+                        'caught_stealing' => $validatedData['caught_stealing'] ?? 0,
+                        'strikeouts' => $validatedData['strikeouts'] ?? 0,
+                        'walks' => $validatedData['walks'] ?? 0,
+                        'hit_by_pitch' => $validatedData['hit_by_pitch'] ?? 0,
+                        'sac_bunts' => $validatedData['sac_bunts'] ?? 0,
+                        'sac_flies' => $validatedData['sac_flies'] ?? 0,
+                        'double_plays' => $validatedData['double_plays'] ?? 0,
+                        'errors' => $validatedData['errors'] ?? 0,
+                        'runs_scored' => $validatedData['runs_scored'] ?? 0,
+                        'batting_average' => $validatedData['batting_average'] ?? 0.000,
+                        'on_base_percentage' => $validatedData['on_base_percentage'] ?? 0.000,
+                        'slugging_percentage' => $validatedData['slugging_percentage'] ?? 0.000,
+                        'ops' => $validatedData['ops'] ?? 0.000,
+                        'ops_plus' => $validatedData['ops_plus'] ?? null,
+                        'wrc_plus' => $validatedData['wrc_plus'] ?? null,
                     ]
                 );
-                // もし役割が投手から野手に変わった場合、古い投球成績は削除（オプション）
                 YearlyPitchingStat::where('player_id', $player->id)
                                   ->where('year', $validatedData['year'])
                                   ->delete();
@@ -472,20 +484,21 @@ class PlayerController extends Controller
                 YearlyPitchingStat::updateOrCreate(
                     ['player_id' => $player->id, 'year' => $validatedData['year']],
                     [
-                        'games' => $validatedData['pitching_games'] ?? null,
-                        'wins' => $validatedData['wins'] ?? null,
-                        'losses' => $validatedData['losses'] ?? null,
-                        'saves' => $validatedData['saves'] ?? null,
-                        'holds' => $validatedData['holds'] ?? null,
-                        'innings_pitched_out' => $validatedData['innings_pitched_out'] ?? null,
-                        'hits_given' => $validatedData['hits_given'] ?? null,
-                        'home_runs_given' => $validatedData['home_runs_given'] ?? null,
-                        'walks_given' => $validatedData['walks_given'] ?? null,
-                        'strikeouts_thrown' => $validatedData['strikeouts_thrown'] ?? null,
-                        'earned_run_average' => $validatedData['earned_run_average'] ?? null,
+                        'team_id' => $validatedData['team_id'], // team_id も成績テーブルに保存
+                        // ★★★ ここもDBカラム名に正確にマッピングする ★★★
+                        'games' => $validatedData['pitching_games'] ?? 0, // ここはDBカラム名とBladeのnameが同じと仮定
+                        'wins' => $validatedData['wins'] ?? 0,
+                        'losses' => $validatedData['losses'] ?? 0,
+                        'saves' => $validatedData['saves'] ?? 0,
+                        'holds' => $validatedData['holds'] ?? 0,
+                        'innings_pitched_out' => $validatedData['innings_pitched_out'] ?? 0,
+                        'hits_given' => $validatedData['hits_given'] ?? 0,
+                        'home_runs_given' => $validatedData['home_runs_given'] ?? 0,
+                        'walks_given' => $validatedData['walks_given'] ?? 0,
+                        'strikeouts_thrown' => $validatedData['strikeouts_thrown'] ?? 0,
+                        'earned_run_average' => $validatedData['earned_run_average'] ?? 0.00,
                     ]
                 );
-                // もし役割が野手から投手に変わった場合、古い打撃成績は削除（オプション）
                 YearlyBattingStat::where('player_id', $player->id)
                                  ->where('year', $validatedData['year'])
                                  ->delete();
@@ -496,30 +509,25 @@ class PlayerController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("選手更新エラー: " . $e->getMessage()); // エラーログ出力
+            Log::error("選手更新エラー: " . $e->getMessage());
             return back()->withInput()->withErrors(['error' => '選手の更新中にエラーが発生しました: ' . $e->getMessage()]);
         }
     }
 
     /**
      * Remove the specified resource from storage.
-     * Route Model Binding を使用して Player インスタンスを直接受け取ります。
      */
     public function destroy(Player $player)
     {
-        // ★★★ destroyメソッドでのdd確認 ★★★
-        // 削除対象の選手オブジェクトが正しく取得されているか確認 (削除前に実行される)
-        // dd($player);
-
         DB::beginTransaction();
         try {
-            $player->delete(); // 関連する yearly_batting_stats/yearly_pitching_stats も cascade で削除されます
+            $player->delete();
 
             DB::commit();
             return redirect()->route('players.index')->with('success', '選手が正常に削除されました！');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("選手削除エラー: " . $e->getMessage()); // エラーログ出力
+            Log::error("選手削除エラー: " . $e->getMessage());
             return back()->withErrors(['error' => '選手の削除中にエラーが発生しました: ' . $e->getMessage()]);
         }
     }
