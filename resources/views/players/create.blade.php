@@ -13,8 +13,8 @@
                         @csrf
 
                         @if ($errors->any())
-                            <div class="mb-4 text-red-600">
-                                <ul>
+                            <div class="mb-4 text-red-600 p-4 bg-red-100 border border-red-400 rounded">
+                                <ul class="list-disc list-inside">
                                     @foreach ($errors->all() as $error)
                                         <li>{{ $error }}</li>
                                     @endforeach
@@ -36,13 +36,11 @@
 
                         <div class="mb-4">
                             <x-input-label for="date_of_birth" :value="__('生年月日')" />
-                            {{-- ★ name属性とid属性を 'date_of_birth' に変更、:messagesも変更 ★ --}}
                             <x-text-input id="date_of_birth" class="block mt-1 w-full" type="date" name="date_of_birth" :value="old('date_of_birth')" />
                             <x-input-error :messages="$errors->get('date_of_birth')" class="mt-2" />
                         </div>
 
-                        {{-- 新しいカラムの入力フィールド (必要に応じて追加) --}}
-                        {{-- マイグレーションでnullableなので、入力は必須ではありません --}}
+                        {{-- 新しいカラムの入力フィールドを追加 --}}
                         <div class="mb-4">
                             <x-input-label for="height" :value="__('身長 (cm)')" />
                             <x-text-input id="height" class="block mt-1 w-full" type="number" name="height" :value="old('height')" />
@@ -269,12 +267,35 @@
                 if (roleSelect.value === '野手') {
                     battingFields.classList.remove('hidden');
                     pitchingFields.classList.add('hidden');
+                    // 野手選択時、投手関連のフィールドを無効にする（フォーム送信から除外）
+                    pitchingFields.querySelectorAll('input, select, textarea').forEach(field => {
+                        field.setAttribute('disabled', 'disabled');
+                    });
+                    // 野手関連のフィールドを有効にする
+                    battingFields.querySelectorAll('input, select, textarea').forEach(field => {
+                        field.removeAttribute('disabled');
+                    });
                 } else if (roleSelect.value === '投手') {
                     pitchingFields.classList.remove('hidden');
                     battingFields.classList.add('hidden');
-                } else {
+                    // 投手選択時、野手関連のフィールドを無効にする
+                    battingFields.querySelectorAll('input, select, textarea').forEach(field => {
+                        field.setAttribute('disabled', 'disabled');
+                    });
+                    // 投手関連のフィールドを有効にする
+                    pitchingFields.querySelectorAll('input, select, textarea').forEach(field => {
+                        field.removeAttribute('disabled');
+                    });
+                } else { // 役割が未選択の場合など
                     battingFields.classList.add('hidden');
                     pitchingFields.classList.add('hidden');
+                    // どちらでもない場合、全て無効にする
+                    battingFields.querySelectorAll('input, select, textarea').forEach(field => {
+                        field.setAttribute('disabled', 'disabled');
+                    });
+                    pitchingFields.querySelectorAll('input, select, textarea').forEach(field => {
+                        field.setAttribute('disabled', 'disabled');
+                    });
                 }
             }
 

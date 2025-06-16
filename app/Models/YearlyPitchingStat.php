@@ -11,8 +11,9 @@ class YearlyPitchingStat extends Model
 
     protected $fillable = [
         'year',
-        'league_id', // どのリーグの統計か
-        'team_id',   // どのチームの統計か (null許容でリーグ全体も表現可能)
+        'player_id',
+        // 'league_id', // どのリーグの統計か
+        // 'team_id',   // どのチームの統計か (null許容でリーグ全体も表現可能)
 
         'total_games_played_pitching',
         'total_wins',
