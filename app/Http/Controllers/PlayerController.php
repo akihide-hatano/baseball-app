@@ -59,20 +59,20 @@ class PlayerController extends Controller
             'player_name' => 'required|string|max:255',
             'role' => 'required|in:野手,投手',
             'jersey_number' => 'nullable|integer|min:0|unique:players,jersey_number,NULL,id,team_id,' . $request->input('team_id'),
-            'date_of_birth' => 'nullable|date', // bladeとmigrationに合わせる
-            'height' => 'nullable|integer|min:0', // 新しいカラムのバリデーション
-            'weight' => 'nullable|integer|min:0', // 新しいカラムのバリデーション
-            'specialty' => 'nullable|string|max:255', // 新しいカラムのバリデーション
-            'description' => 'nullable|string|max:1000', // 新しいカラムのバリデーション
-            'hometown' => 'nullable|string|max:255', // 新しいカラムのバリデーション
+            'date_of_birth' => 'nullable|date',
+            'height' => 'nullable|integer|min:0',
+            'weight' => 'nullable|integer|min:0',
+            'specialty' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'hometown' => 'nullable|string|max:255',
             'year' => 'required|integer|min:1900|max:' . (date('Y') + 1), // 成績の年度
         ];
 
         // 役割に応じた追加のバリデーションルール (フォームのname属性に合わせる)
         if ($request->input('role') === '野手') {
             $rules = array_merge($rules, [
-                'games' => 'nullable|integer|min:0', // bladeのname属性に合わせる
-                'plate_appearances' => 'nullable|integer|min:0', // bladeのname属性に合わせる
+                'games' => 'nullable|integer|min:0',
+                'plate_appearances' => 'nullable|integer|min:0',
                 'at_bats' => 'nullable|integer|min:0',
                 'hits' => 'nullable|integer|min:0',
                 'doubles' => 'nullable|integer|min:0',
@@ -83,16 +83,17 @@ class PlayerController extends Controller
                 'caught_stealing' => 'nullable|integer|min:0',
                 'strikeouts' => 'nullable|integer|min:0',
                 'walks' => 'nullable|integer|min:0',
-                'hit_by_pitch' => 'nullable|integer|min:0', // bladeのname属性に合わせる
-                'sac_bunts' => 'nullable|integer|min:0', // bladeのname属性に合わせる
+                'hit_by_pitch' => 'nullable|integer|min:0',
+                'sac_bunts' => 'nullable|integer|min:0',
                 'sac_flies' => 'nullable|integer|min:0',
-                'double_plays' => 'nullable|integer|min:0', // bladeのname属性に合わせる
-                'errors' => 'nullable|integer|min:0',       // bladeのname属性に合わせる
-                'runs_scored' => 'nullable|integer|min:0',  // bladeのname属性に合わせる
-                'batting_average' => 'nullable|numeric|min:0|max:1',
-                'on_base_percentage' => 'nullable|numeric|min:0|max:1', // bladeのname属性に合わせる
-                'slugging_percentage' => 'nullable|numeric|min:0|max:1',// bladeのname属性に合わせる
-                'ops' => 'nullable|numeric|min:0|max:2', // OPSは1を超える可能性があるのでmaxを2などに
+                'double_plays' => 'nullable|integer|min:0',
+                'errors' => 'nullable|integer|min:0',
+                'runs_scored' => 'nullable|integer|min:0',
+                // これらの指標は計算で入れるため、バリデーションは不要
+                // 'batting_average' => 'nullable|numeric|min:0|max:1',
+                // 'on_base_percentage' => 'nullable|numeric|min:0|max:1',
+                // 'slugging_percentage' => 'nullable|numeric|min:0|max:1',
+                // 'ops' => 'nullable|numeric|min:0|max:2',
                 'ops_plus' => 'nullable|numeric',
                 'wrc_plus' => 'nullable|numeric',
             ]);
@@ -115,17 +116,15 @@ class PlayerController extends Controller
 
         $validatedData = $request->validate($rules);
 
-        // dd($validatedData, $request->all()); // データ確認用のdd()はコメントアウトまたは削除
-
         DB::beginTransaction();
         try {
             // 選手データを保存
             $player = Player::create([
                 'team_id' => $validatedData['team_id'],
-                'name' => $validatedData['player_name'], // DBカラム名 'name' にマッピング
+                'name' => $validatedData['player_name'],
                 'role' => $validatedData['role'],
                 'jersey_number' => $validatedData['jersey_number'],
-                'date_of_birth' => $validatedData['date_of_birth'], // DBカラム名 'date_of_birth' にマッピング
+                'date_of_birth' => $validatedData['date_of_birth'],
                 'height' => $validatedData['height'] ?? null,
                 'weight' => $validatedData['weight'] ?? null,
                 'specialty' => $validatedData['specialty'] ?? null,
@@ -135,33 +134,61 @@ class PlayerController extends Controller
 
             // 役割に応じて成績データを保存
             if ($player->role === '野手') {
+                // 基本的な打撃成績を取得（nullの場合は0に）
+                $hits = $validatedData['hits'] ?? 0;
+                $at_bats = $validatedData['at_bats'] ?? 0;
+                $walks = $validatedData['walks'] ?? 0;
+                $hit_by_pitch = $validatedData['hit_by_pitch'] ?? 0;
+                $sac_flies = $validatedData['sac_flies'] ?? 0;
+                $doubles = $validatedData['doubles'] ?? 0;
+                $triples = $validatedData['triples'] ?? 0;
+                $home_runs = $validatedData['home_runs'] ?? 0;
+
+                // ★★★ 打撃指標の計算 ★★★
+                // 打率 (BA)
+                $batting_average = ($at_bats > 0) ? round($hits / $at_bats, 3) : 0.000;
+
+                // 出塁率 (OBP)
+                $obp_denominator = $at_bats + $walks + $hit_by_pitch + $sac_flies;
+                $on_base_percentage = ($obp_denominator > 0) ? round(($hits + $walks + $hit_by_pitch) / $obp_denominator, 3) : 0.000;
+
+                // 長打率 (SLG)
+                $singles = $hits - $doubles - $triples - $home_runs;
+                $total_bases = $singles + (2 * $doubles) + (3 * $triples) + (4 * $home_runs);
+                $slugging_percentage = ($at_bats > 0) ? round($total_bases / $at_bats, 3) : 0.000;
+
+                // OPS
+                $ops = $on_base_percentage + $slugging_percentage;
+
                 YearlyBattingStat::create([
                     'player_id' => $player->id,
                     'year' => $validatedData['year'],
-                    'team_id' => $validatedData['team_id'], // team_id も成績テーブルに保存
-                    // ★★★ ここをDBカラム名に正確にマッピングする ★★★
+                    'team_id' => $validatedData['team_id'],
+
                     'games' => $validatedData['games'] ?? 0,
                     'plate_appearances' => $validatedData['plate_appearances'] ?? 0,
-                    'at_bats' => $validatedData['at_bats'] ?? 0,
-                    'hits' => $validatedData['hits'] ?? 0,
-                    'doubles' => $validatedData['doubles'] ?? 0,
-                    'triples' => $validatedData['triples'] ?? 0,
-                    'home_runs' => $validatedData['home_runs'] ?? 0,
+                    'at_bats' => $at_bats,
+                    'hits' => $hits,
+                    'doubles' => $doubles,
+                    'triples' => $triples,
+                    'home_runs' => $home_runs,
                     'rbi' => $validatedData['rbi'] ?? 0,
                     'stolen_bases' => $validatedData['stolen_bases'] ?? 0,
                     'caught_stealing' => $validatedData['caught_stealing'] ?? 0,
                     'strikeouts' => $validatedData['strikeouts'] ?? 0,
-                    'walks' => $validatedData['walks'] ?? 0,
-                    'hit_by_pitch' => $validatedData['hit_by_pitch'] ?? 0,
-                    'sac_bunts' => $validatedData['sac_bunts'] ?? 0, // フォーム名は sacrifice_hits
-                    'sac_flies' => $validatedData['sac_flies'] ?? 0,
+                    'walks' => $walks,
+                    'hit_by_pitch' => $hit_by_pitch,
+                    'sac_bunts' => $validatedData['sac_bunts'] ?? 0,
+                    'sac_flies' => $sac_flies,
                     'double_plays' => $validatedData['double_plays'] ?? 0,
                     'errors' => $validatedData['errors'] ?? 0,
-                    'runs_scored' => $validatedData['runs_scored'] ?? 0, // フォーム名は runs
-                    'batting_average' => $validatedData['batting_average'] ?? 0.000,
-                    'on_base_percentage' => $validatedData['on_base_percentage'] ?? 0.000,
-                    'slugging_percentage' => $validatedData['slugging_percentage'] ?? 0.000,
-                    'ops' => $validatedData['ops'] ?? 0.000,
+                    'runs_scored' => $validatedData['runs_scored'] ?? 0,
+
+                    // 計算結果を保存
+                    'batting_average' => $batting_average,
+                    'on_base_percentage' => $on_base_percentage,
+                    'slugging_percentage' => $slugging_percentage,
+                    'ops' => $ops,
                     'ops_plus' => $validatedData['ops_plus'] ?? null,
                     'wrc_plus' => $validatedData['wrc_plus'] ?? null,
                 ]);
@@ -169,10 +196,8 @@ class PlayerController extends Controller
                 YearlyPitchingStat::create([
                     'player_id' => $player->id,
                     'year' => $validatedData['year'],
-                    'team_id' => $validatedData['team_id'], // team_id も成績テーブルに保存
-
-                    // ★★★ ここもDBカラム名に正確にマッピングする ★★★
-                    'games' => $validatedData['pitching_games'] ?? 0, // ここはDBカラム名とBladeのnameが同じと仮定
+                    'team_id' => $validatedData['team_id'],
+                    'games' => $validatedData['pitching_games'] ?? 0,
                     'wins' => $validatedData['wins'] ?? 0,
                     'losses' => $validatedData['losses'] ?? 0,
                     'saves' => $validatedData['saves'] ?? 0,
@@ -401,10 +426,11 @@ class PlayerController extends Controller
                 'double_plays' => 'nullable|integer|min:0',
                 'errors' => 'nullable|integer|min:0',
                 'runs_scored' => 'nullable|integer|min:0',
-                'batting_average' => 'nullable|numeric|min:0|max:1',
-                'on_base_percentage' => 'nullable|numeric|min:0|max:1',
-                'slugging_percentage' => 'nullable|numeric|min:0|max:1',
-                'ops' => 'nullable|numeric|min:0|max:2',
+                // これらの指標は計算で入れるため、バリデーションは不要
+                // 'batting_average' => 'nullable|numeric|min:0|max:1',
+                // 'on_base_percentage' => 'nullable|numeric|min:0|max:1',
+                // 'slugging_percentage' => 'nullable|numeric|min:0|max:1',
+                // 'ops' => 'nullable|numeric|min:0|max:2',
                 'ops_plus' => 'nullable|numeric',
                 'wrc_plus' => 'nullable|numeric',
             ]);
@@ -426,8 +452,6 @@ class PlayerController extends Controller
 
         $validatedData = $request->validate($rules);
 
-        // dd($player, $validatedData, $request->all()); // データ確認用のdd()はコメントアウトまたは削除
-
         DB::beginTransaction();
         try {
             // 選手データを更新
@@ -446,37 +470,64 @@ class PlayerController extends Controller
 
             // 年度の成績を更新または新規作成
             if ($player->role === '野手') {
+                // 基本的な打撃成績を取得（nullの場合は0に）
+                $hits = $validatedData['hits'] ?? 0;
+                $at_bats = $validatedData['at_bats'] ?? 0;
+                $walks = $validatedData['walks'] ?? 0;
+                $hit_by_pitch = $validatedData['hit_by_pitch'] ?? 0;
+                $sac_flies = $validatedData['sac_flies'] ?? 0;
+                $doubles = $validatedData['doubles'] ?? 0;
+                $triples = $validatedData['triples'] ?? 0;
+                $home_runs = $validatedData['home_runs'] ?? 0;
+
+                // ★★★ 打撃指標の計算 ★★★
+                // 打率 (BA)
+                $batting_average = ($at_bats > 0) ? round($hits / $at_bats, 3) : 0.000;
+
+                // 出塁率 (OBP)
+                $obp_denominator = $at_bats + $walks + $hit_by_pitch + $sac_flies;
+                $on_base_percentage = ($obp_denominator > 0) ? round(($hits + $walks + $hit_by_pitch) / $obp_denominator, 3) : 0.000;
+
+                // 塁打数の計算
+                $singles = $hits - $doubles - $triples - $home_runs;
+                $total_bases = $singles + (2 * $doubles) + (3 * $triples) + (4 * $home_runs);
+                $slugging_percentage = ($at_bats > 0) ? round($total_bases / $at_bats, 3) : 0.000;
+
+                // OPS
+                $ops = $on_base_percentage + $slugging_percentage;
+
                 YearlyBattingStat::updateOrCreate(
                     ['player_id' => $player->id, 'year' => $validatedData['year']],
                     [
-                        'team_id' => $validatedData['team_id'], // team_id も成績テーブルに保存
-                        // ★★★ ここをDBカラム名に正確にマッピングする ★★★
+                        'team_id' => $validatedData['team_id'],
                         'games' => $validatedData['games'] ?? 0,
                         'plate_appearances' => $validatedData['plate_appearances'] ?? 0,
-                        'at_bats' => $validatedData['at_bats'] ?? 0,
-                        'hits' => $validatedData['hits'] ?? 0,
-                        'doubles' => $validatedData['doubles'] ?? 0,
-                        'triples' => $validatedData['triples'] ?? 0,
-                        'home_runs' => $validatedData['home_runs'] ?? 0,
+                        'at_bats' => $at_bats,
+                        'hits' => $hits,
+                        'doubles' => $doubles,
+                        'triples' => $triples,
+                        'home_runs' => $home_runs,
                         'rbi' => $validatedData['rbi'] ?? 0,
                         'stolen_bases' => $validatedData['stolen_bases'] ?? 0,
                         'caught_stealing' => $validatedData['caught_stealing'] ?? 0,
                         'strikeouts' => $validatedData['strikeouts'] ?? 0,
-                        'walks' => $validatedData['walks'] ?? 0,
-                        'hit_by_pitch' => $validatedData['hit_by_pitch'] ?? 0,
+                        'walks' => $walks,
+                        'hit_by_pitch' => $hit_by_pitch,
                         'sac_bunts' => $validatedData['sac_bunts'] ?? 0,
-                        'sac_flies' => $validatedData['sac_flies'] ?? 0,
+                        'sac_flies' => $sac_flies,
                         'double_plays' => $validatedData['double_plays'] ?? 0,
                         'errors' => $validatedData['errors'] ?? 0,
                         'runs_scored' => $validatedData['runs_scored'] ?? 0,
-                        'batting_average' => $validatedData['batting_average'] ?? 0.000,
-                        'on_base_percentage' => $validatedData['on_base_percentage'] ?? 0.000,
-                        'slugging_percentage' => $validatedData['slugging_percentage'] ?? 0.000,
-                        'ops' => $validatedData['ops'] ?? 0.000,
+                        // 計算結果を保存
+                        'batting_average' => $batting_average,
+                        'on_base_percentage' => $on_base_percentage,
+                        'slugging_percentage' => $slugging_percentage,
+                        'ops' => $ops,
                         'ops_plus' => $validatedData['ops_plus'] ?? null,
                         'wrc_plus' => $validatedData['wrc_plus'] ?? null,
                     ]
                 );
+                // もし役割が投手から野手に変わった場合、古い投球成績は削除（オプション）
                 YearlyPitchingStat::where('player_id', $player->id)
                                   ->where('year', $validatedData['year'])
                                   ->delete();
@@ -484,9 +535,8 @@ class PlayerController extends Controller
                 YearlyPitchingStat::updateOrCreate(
                     ['player_id' => $player->id, 'year' => $validatedData['year']],
                     [
-                        'team_id' => $validatedData['team_id'], // team_id も成績テーブルに保存
-                        // ★★★ ここもDBカラム名に正確にマッピングする ★★★
-                        'games' => $validatedData['pitching_games'] ?? 0, // ここはDBカラム名とBladeのnameが同じと仮定
+                        'team_id' => $validatedData['team_id'],
+                        'games' => $validatedData['pitching_games'] ?? 0,
                         'wins' => $validatedData['wins'] ?? 0,
                         'losses' => $validatedData['losses'] ?? 0,
                         'saves' => $validatedData['saves'] ?? 0,
@@ -499,6 +549,7 @@ class PlayerController extends Controller
                         'earned_run_average' => $validatedData['earned_run_average'] ?? 0.00,
                     ]
                 );
+                // もし役割が野手から投手に変わった場合、古い打撃成績は削除（オプション）
                 YearlyBattingStat::where('player_id', $player->id)
                                  ->where('year', $validatedData['year'])
                                  ->delete();

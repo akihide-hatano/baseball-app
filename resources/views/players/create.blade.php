@@ -107,19 +107,24 @@
                             <h3 class="font-semibold text-lg text-gray-700 mb-4">{{ __('打撃成績') }}</h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <x-input-label for="batting_games" :value="__('出場試合数')" />
-                                    <x-text-input id="batting_games" class="block mt-1 w-full" type="number" name="batting_games" :value="old('batting_games')" />
-                                    <x-input-error :messages="$errors->get('batting_games')" class="mt-2" />
+                                    <x-input-label for="games" :value="__('出場試合数')" />
+                                    <x-text-input id="games" class="block mt-1 w-full" type="number" name="games" :value="old('games')" />
+                                    <x-input-error :messages="$errors->get('games')" class="mt-2" />
                                 </div>
                                 <div>
-                                    <x-input-label for="at_bats" :value="__('打席数')" />
+                                    <x-input-label for="plate_appearances" :value="__('打席数')" />
+                                    <x-text-input id="plate_appearances" class="block mt-1 w-full" type="number" name="plate_appearances" :value="old('plate_appearances')" />
+                                    <x-input-error :messages="$errors->get('plate_appearances')" class="mt-2" />
+                                </div>
+                                <div>
+                                    <x-input-label for="at_bats" :value="__('打数')" />
                                     <x-text-input id="at_bats" class="block mt-1 w-full" type="number" name="at_bats" :value="old('at_bats')" />
                                     <x-input-error :messages="$errors->get('at_bats')" class="mt-2" />
                                 </div>
                                 <div>
-                                    <x-input-label for="runs" :value="__('得点')" />
-                                    <x-text-input id="runs" class="block mt-1 w-full" type="number" name="runs" :value="old('runs')" />
-                                    <x-input-error :messages="$errors->get('runs')" class="mt-2" />
+                                    <x-input-label for="runs_scored" :value="__('得点')" /> {{-- nameをruns_scoredに修正 --}}
+                                    <x-text-input id="runs_scored" class="block mt-1 w-full" type="number" name="runs_scored" :value="old('runs_scored')" />
+                                    <x-input-error :messages="$errors->get('runs_scored')" class="mt-2" />
                                 </div>
                                 <div>
                                     <x-input-label for="hits" :value="__('安打')" />
@@ -163,23 +168,60 @@
                                 </div>
                                 <div>
                                     <x-input-label for="strikeouts" :value="__('三振')" />
-                                    <x-text-input id="strikeouts" class="block mt-1 w-full" type="number" name="strikeouts" :value="old('strikeouts')" />
+                                -    <x-text-input id="strikeouts" class="block mt-1 w-full" type="number" name="strikeouts" :value="old('strikeouts')" />
                                     <x-input-error :messages="$errors->get('strikeouts')" class="mt-2" />
                                 </div>
                                 <div>
-                                    <x-input-label for="sacrifice_hits" :value="__('犠打')" />
-                                    <x-text-input id="sacrifice_hits" class="block mt-1 w-full" type="number" name="sacrifice_hits" :value="old('sacrifice_hits')" />
-                                    <x-input-error :messages="$errors->get('sacrifice_hits')" class="mt-2" />
+                                    <x-input-label for="sac_bunts" :value="__('犠打')" /> {{-- nameをsac_buntsに修正 --}}
+                                    <x-text-input id="sac_bunts" class="block mt-1 w-full" type="number" name="sac_bunts" :value="old('sac_bunts')" />
+                                    <x-input-error :messages="$errors->get('sac_bunts')" class="mt-2" />
                                 </div>
                                 <div>
-                                    <x-input-label for="sacrifice_flies" :value="__('犠飛')" />
-                                    <x-text-input id="sacrifice_flies" class="block mt-1 w-full" type="number" name="sacrifice_flies" :value="old('sacrifice_flies')" />
-                                    <x-input-error :messages="$errors->get('sacrifice_flies')" class="mt-2" />
+                                    <x-input-label for="sac_flies" :value="__('犠飛')" />
+                                    <x-text-input id="sac_flies" class="block mt-1 w-full" type="number" name="sac_flies" :value="old('sac_flies')" />
+                                    <x-input-error :messages="$errors->get('sac_flies')" class="mt-2" />
                                 </div>
                                 <div>
-                                    <x-input-label for="batting_average" :value="__('打率 (例: 0.300)')" />
-                                    <x-text-input id="batting_average" class="block mt-1 w-full" type="text" name="batting_average" :value="old('batting_average')" step="0.001" placeholder="0.XXX" />
+                                    <x-input-label for="double_plays" :value="__('併殺打')" />
+                                    <x-text-input id="double_plays" class="block mt-1 w-full" type="number" name="double_plays" :value="old('double_plays')" />
+                                    <x-input-error :messages="$errors->get('double_plays')" class="mt-2" />
+                                </div>
+                                <div>
+                                    <x-input-label for="errors" :value="__('失策')" />
+                                    <x-text-input id="errors" class="block mt-1 w-full" type="number" name="errors" :value="old('errors')" />
+                                    <x-input-error :messages="$errors->get('errors')" class="mt-2" />
+                                </div>
+                                {{-- 打率はコントローラーで計算されるため、readonlyにする --}}
+                                <div>
+                                    <x-input-label for="batting_average" :value="__('打率 (自動計算)')" />
+                                    <x-text-input id="batting_average" class="block mt-1 w-full bg-gray-100" type="text" name="batting_average" :value="old('batting_average', '0.000')" readonly />
                                     <x-input-error :messages="$errors->get('batting_average')" class="mt-2" />
+                                </div>
+                                {{-- 出塁率、長打率、OPSも同様にreadonlyにする --}}
+                                <div>
+                                    <x-input-label for="on_base_percentage" :value="__('出塁率 (自動計算)')" />
+                                    <x-text-input id="on_base_percentage" class="block mt-1 w-full bg-gray-100" type="text" name="on_base_percentage" :value="old('on_base_percentage', '0.000')" readonly />
+                                    <x-input-error :messages="$errors->get('on_base_percentage')" class="mt-2" />
+                                </div>
+                                <div>
+                                    <x-input-label for="slugging_percentage" :value="__('長打率 (自動計算)')" />
+                                    <x-text-input id="slugging_percentage" class="block mt-1 w-full bg-gray-100" type="text" name="slugging_percentage" :value="old('slugging_percentage', '0.000')" readonly />
+                                    <x-input-error :messages="$errors->get('slugging_percentage')" class="mt-2" />
+                                </div>
+                                <div>
+                                    <x-input-label for="ops" :value="__('OPS (自動計算)')" />
+                                    <x-text-input id="ops" class="block mt-1 w-full bg-gray-100" type="text" name="ops" :value="old('ops', '0.000')" readonly />
+                                    <x-input-error :messages="$errors->get('ops')" class="mt-2" />
+                                </div>
+                                <div>
+                                    <x-input-label for="ops_plus" :value="__('OPS+ (例: 100.0)')" />
+                                    <x-text-input id="ops_plus" class="block mt-1 w-full" type="text" name="ops_plus" :value="old('ops_plus')" step="0.1" placeholder="X.X" />
+                                    <x-input-error :messages="$errors->get('ops_plus')" class="mt-2" />
+                                </div>
+                                <div>
+                                    <x-input-label for="wrc_plus" :value="__('wRC+ (例: 100.0)')" />
+                                    <x-text-input id="wrc_plus" class="block mt-1 w-full" type="text" name="wrc_plus" :value="old('wrc_plus')" step="0.1" placeholder="X.X" />
+                                    <x-input-error :messages="$errors->get('wrc_plus')" class="mt-2" />
                                 </div>
                             </div>
                         </div>
