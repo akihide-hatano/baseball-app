@@ -54,9 +54,22 @@ Route::middleware('auth')->group(function () {
     Route::get('/teams', [TeamController::class, 'index'])->name('teams.index');
 
 
-    // 試合関連のルート (既存のまま)
+    // 試合関連のルート (個別に定義する場合の正しい順序)
+    // 1. 新規作成フォーム (固定パス)
+    Route::get('/games/create', [GameController::class, 'create'])->name('games.create');
+    // 2. データ保存 (固定パス)
+    Route::post('/games', [GameController::class, 'store'])->name('games.store');
+    // 3. 編集フォーム (動的パスだが、/edit が付くため show より具体的)
+    Route::get('/games/{game}/edit', [GameController::class, 'edit'])->name('games.edit');
+    // 4. 更新処理 (動的パス, PUT/PATCH)
+    Route::patch('/games/{game}', [GameController::class, 'update'])->name('games.update');
+    Route::put('/games/{game}', [GameController::class, 'update']); // PATCHとPUTの両方を受け入れる場合
+    // 5. 削除処理 (動的パス, DELETE)
+    Route::delete('/games/{game}', [GameController::class, 'destroy'])->name('games.destroy');
+    // 6. 詳細表示 (最も一般的な動的パス)
+    Route::get('/games/{game}', [GameController::class, 'show'])->name('games.show');
+    // 7. 一覧表示 (固定パスだが、動的パスと衝突しないように最後に近い位置)
     Route::get('/games', [GameController::class, 'index'])->name('games.index');
-    Route::get('/games/{id}', [GameController::class, 'show'])->name('games.show');
 });
 
 require __DIR__.'/auth.php';
