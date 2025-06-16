@@ -62,7 +62,16 @@ class GameController extends Controller
      */
     public function create()
     {
-        return "試合作成フォーム (未実装)";
+        $teams = Team::all();
+        $players = Player::all();
+        $stadiums = Game::select('stadium')->distinct()->pluck('stadium');
+        // dd($stadiums);
+        $currentDate = Carbon::now()->format('Y-m-d'); // 今日の日付をデフォルト値として
+        $currentTime = Carbon::now()->format('H:i'); // 現在時刻をデフォルト値として
+
+        // dd($teams,$players,$currentDate,$currentTime);
+
+        return view('games.create', compact('teams', 'players', 'currentDate', 'currentTime','stadiums'));
     }
 
     /**
