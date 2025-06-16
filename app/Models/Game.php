@@ -4,25 +4,27 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon; // Carbonを使用するために追加
 
 class Game extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'game_date',
         'home_team_id',
         'away_team_id',
+        'game_date',
+        'game_time',
         'home_score',
         'away_score',
-        'venue',
-        'status', // 例: 'scheduled', 'in_progress', 'final', 'postponed'
-        'duration', // 例: '2h30m'
-        'attendance',
-        'winning_pitcher_id', // 勝利投手 (nullable)
-        'losing_pitcher_id',  // 敗戦投手 (nullable)
-        'saving_pitcher_id',  // セーブ投手 (nullable)
-        'mvp_player_id',      // MVP選手 (nullable)
+        'stadium',
+        'home_score',
+        'away_score',
+    ];
+
+        protected $casts = [
+        'game_date' => 'date',
+        'game_time' => 'datetime', // 'time'型はそのままではCarbonオブジェクトにならないため'datetime'にキャスト
     ];
 
     /**

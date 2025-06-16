@@ -93,35 +93,6 @@
                                 <x-text-input id="away_score" class="block mt-1 w-full" type="number" name="away_score" :value="old('away_score')" min="0" />
                                 <x-input-error :messages="$errors->get('away_score')" class="mt-2" />
                             </div>
-
-                            {{-- MVP選手 --}}
-                            <div>
-                                <x-input-label for="mvp_player_id" :value="__('MVP選手 (任意)')" />
-                                <select id="mvp_player_id" name="mvp_player_id" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                                    <option value="">選択しない</option>
-                                    @foreach ($players as $player)
-                                        <option value="{{ $player->id }}" {{ old('mvp_player_id') == $player->id ? 'selected' : '' }}>
-                                            {{ $player->name }} ({{ $player->team->team_name ?? '不明' }})
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <x-input-error :messages="$errors->get('mvp_player_id')" class="mt-2" />
-                            </div>
-
-                            {{-- 勝利投手 --}}
-                            <div>
-                                <x-input-label for="pitcher_of_record_id" :value="__('勝利投手 (任意)')" />
-                                <select id="pitcher_of_record_id" name="pitcher_of_record_id" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                                    <option value="">選択しない</option>
-                                    @foreach ($players as $player)
-                                        {{-- 投手に絞る場合は $player->role == '投手' などでフィルタリング --}}
-                                        <option value="{{ $player->id }}" {{ old('pitcher_of_record_id') == $player->id ? 'selected' : '' }}>
-                                            {{ $player->name }} ({{ $player->team->team_name ?? '不明' }})
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <x-input-error :messages="$errors->get('pitcher_of_record_id')" class="mt-2" />
-                            </div>
                         </div>
 
                         <div class="flex items-center justify-end mt-6">

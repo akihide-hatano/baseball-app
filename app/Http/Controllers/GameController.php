@@ -79,7 +79,52 @@ class GameController extends Controller
      */
     public function store(Request $request)
     {
-        return "新しい試合を保存しました (未実装)";
+        // dd($request->all());
+                // バリデーションルールを定義
+        $validatedData = $request->validate([
+            'home_team_id' => 'required|exists:teams,id',
+            'away_team_id' => 'required|exists:teams,id|different:home_team_id', // ホームとアウェイは異なるチーム
+            'game_date' => 'required|date',
+            'game_time' => 'required|date_format:H:i', // HH:MM形式で必須
+            'stadium' => 'required|string|max:255', // 球場名を必須に（文字列として受け取る）
+            'home_score' => 'nullable|integer|min:0', // nullableに変更
+            'away_score' => 'nullable|integer|min:0', // nullableに変更
+        ]);
+
+        DB::beginTransaction(); // トランザクション開始
+        try {
+            // スコアが入力されている場合に結果を決定、そうでなければnull
+            $gameResult = null;
+            if (isset($validatedData['home_score']) && isset($validatedData['away_score'])) {
+                if ($validatedData['home_score'] > $validatedData['away_score']) {
+                    $gameResult = 'Win'; // ホームチーム目線で「勝ち」
+                } elseif ($validatedData['home_score'] < $validatedData['away_score']) {
+                    $gameResult = 'Loss'; // ホームチーム目線で「負け」
+                } else {
+                    $gameResult = 'Draw'; // 引き分け
+                }
+            }
+
+            // データベースに試合データを保存
+            Game::create([
+                'home_team_id' => $validatedData['home_team_id'],
+                'away_team_id' => $validatedData['away_team_id'],
+                'game_date' => $validatedData['game_date'],
+                'game_time' => $validatedData['game_time'],
+                'stadium' => $validatedData['stadium'],
+                'home_score' => $validatedData['home_score'],
+                'away_score' => $validatedData['away_score'],
+                'game_result' => $gameResult,
+            ]);
+
+            DB::commit(); // トランザクションコミット
+            return redirect()->route('games.index')->with('success', '新しい試合が正常に登録されました！');
+
+        } catch (\Exception $e) {
+            DB::rollBack(); // エラー時はロールバック
+            Log::error("試合登録エラー: " . $e->getMessage());
+            return back()->withInput()->withErrors(['error' => '試合の登録中にエラーが発生しました: ' . $e->getMessage()]);
+        }
     }
 
     /**
