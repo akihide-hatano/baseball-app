@@ -3,8 +3,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const roleSelect = document.getElementById('role');
     const battingFields = document.getElementById('batting-stats-fields');
     const pitchingFields = document.getElementById('pitching-stats-fields');
-    const playerForm = document.getElementById('playerCreationForm'); // 選手作成/編集フォーム用
-    const gameEditForm = document.getElementById('gameEditForm'); // 試合編集フォーム用
 
 
     // 選手関連の要素が存在する場合のみ、toggleStatsFields 関数を定義・実行
@@ -48,24 +46,5 @@ document.addEventListener('DOMContentLoaded', function () {
         toggleStatsFields();
         // 役割選択が変更されたときに切り替え
         roleSelect.addEventListener('change', toggleStatsFields); // ここは既にroleSelectが存在する保証があるのでifは不要
-    }
-
-
-    // フォーム送信時の確認のダイアログ (選手フォーム用)
-    if (playerForm) {
-        playerForm.addEventListener('submit', (e) => {
-            if (!confirm('選手を登録してもよろしいですか？')) { // ★選手用メッセージ
-                e.preventDefault();
-            }
-        });
-    }
-
-    // フォーム送信時の確認のダイアログ (試合編集フォーム用)
-    if (gameEditForm) { // ★修正点: gameEditFormの存在確認
-        gameEditForm.addEventListener('submit', (e) => {
-            if (!confirm('本当にこの試合情報を更新しますか？')) { // ★試合用メッセージ
-                e.preventDefault();
-            }
-        });
     }
 });

@@ -111,5 +111,5 @@
         </div>
     </div>
     {{-- 外部JavaScriptファイルを読み込む --}}
-    <script src="{{ asset('js/player-form-toggle.js') }}"></script>
+    <script src="{{ asset('js/form-confirmation.js') }}"></script>
 </x-app-layout>
