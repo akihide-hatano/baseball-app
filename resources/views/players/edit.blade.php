@@ -11,7 +11,7 @@
                 <div class="p-6 bg-white border-b border-gray-200">
                     <form method="POST" action="{{ route('players.update', $player->id) }}">
                         @csrf
-                        @method('PUT') {{-- PUTメソッドを使用 --}}
+                        @method('PATCH') {{-- PUTメソッドを使用 --}}
 
                         @if ($errors->any())
                             <div class="mb-4 text-red-600 p-4 bg-red-100 border border-red-400 rounded">

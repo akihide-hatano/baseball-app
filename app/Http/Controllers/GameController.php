@@ -191,9 +191,9 @@ class GameController extends Controller
             $gameResult = null;
             if (isset($validatedData['home_score']) && isset($validatedData['away_score'])) {
                 if ($validatedData['home_score'] > $validatedData['away_score']) {
-                    $gameResult = 'Win';
+                    $gameResult = 'Home Win';
                 } elseif ($validatedData['home_score'] < $validatedData['away_score']) {
-                    $gameResult = 'Loss';
+                    $gameResult = 'Away Win';
                 } else {
                     $gameResult = 'Draw';
                 }
