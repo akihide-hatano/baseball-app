@@ -11,44 +11,59 @@
         {{-- 試合基本情報 --}}
         <div class="bg-white shadow-xl rounded-lg p-8 mb-8">
             <h2 class="text-2xl font-bold mb-4 text-indigo-700">試合情報</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-lg">
-                <p><strong>日付:</strong> <span class="text-blue-700">{{ \Carbon\Carbon::parse($game->game_date)->format('Y年m月d日') }}</span></p>
-                <p><strong>時刻:</strong> <span class="text-blue-700">{{ \Carbon\Carbon::parse($game->game_time)->format('H:i') }}</span></p>
-                <p class="md:col-span-2"><strong>球場:</strong> <span class="text-blue-700">{{ $game->stadium ?? '-' }}</span></p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-lg">
+                    <p><strong>日付:</strong> <span class="text-blue-700">{{ \Carbon\Carbon::parse($game->game_date)->format('Y年m月d日') }}</span></p>
+                    <p><strong>時刻:</strong> <span class="text-blue-700">{{ \Carbon\Carbon::parse($game->game_time)->format('H:i') }}</span></p>
+                    <p class="md:col-span-2"><strong>球場:</strong> <span class="text-blue-700">{{ $game->stadium ?? '-' }}</span></p>
 
-                <p><strong>ホームチーム:</strong> <span class="text-blue-700">{{ $game->homeTeam->team_name ?? '不明' }}</span></p>
-                <p><strong>アウェイチーム:</strong> <span class="text-blue-700">{{ $game->awayTeam->team_name ?? '不明' }}</span></p>
+                    <p><strong>ホームチーム:</strong> <span class="text-blue-700">{{ $game->homeTeam->team_name ?? '不明' }}</span></p>
+                    <p><strong>アウェイチーム:</strong> <span class="text-blue-700">{{ $game->awayTeam->team_name ?? '不明' }}</span></p>
 
-                <p><strong>スコア:</strong>
-                    <span class="text-blue-700">
-                        @if($game->home_score !== null && $game->away_score !== null)
-                            {{ $game->home_score }} - {{ $game->away_score }}
-                        @else
-                            未定
-                        @endif
-                    </span>
-                </p>
-                <p><strong>結果:</strong>
-                    @php
-                        $displayResultText = '-';
-                        $resultTextColorClass = 'text-gray-700'; // デフォルト
+                    <p><strong>スコア:</strong>
+                        <span class="text-blue-700">
+                            @if($game->home_score !== null && $game->away_score !== null)
+                                {{ $game->home_score }} - {{ $game->away_score }}
+                            @else
+                                未定
+                            @endif
+                        </span>
+                    </p>
+                    <p><strong>結果:</strong>
+                        @php
+                            $displayResultText = '-';
+                            $resultTextColorClass = 'text-gray-700'; // デフォルト
 
-                        if ($game->game_result === 'Home Win') {
-                            $displayResultText = ($game->homeTeam->team_name ?? 'ホームチーム') . 'の勝ち';
-                            $resultTextColorClass = 'text-green-700';
-                        } elseif ($game->game_result === 'Away Win') {
-                            $displayResultText = ($game->awayTeam->team_name ?? 'アウェイチーム') . 'の勝ち';
-                            $resultTextColorClass = 'text-blue-700';
-                        } elseif ($game->game_result === '引き分け' || $game->game_result === 'Draw') {
-                            $displayResultText = '引き分け';
-                            $resultTextColorClass = 'text-gray-700';
-                        }
-                    @endphp
-                    <span class="font-semibold {{ $resultTextColorClass }}">
-                        {{ $displayResultText }}
-                    </span>
-                </p>
-            </div>
+                            if ($game->game_result === 'Home Win') {
+                                $displayResultText = ($game->homeTeam->team_name ?? 'ホームチーム') . 'の勝ち';
+                                $resultTextColorClass = 'text-green-700';
+                            } elseif ($game->game_result === 'Away Win') {
+                                $displayResultText = ($game->awayTeam->team_name ?? 'アウェイチーム') . 'の勝ち';
+                                $resultTextColorClass = 'text-blue-700';
+                            } elseif ($game->game_result === '引き分け' || $game->game_result === 'Draw') {
+                                $displayResultText = '引き分け';
+                                $resultTextColorClass = 'text-gray-700';
+                            }
+                        @endphp
+                        <span class="font-semibold {{ $resultTextColorClass }}">
+                            {{ $displayResultText }}
+                        </span>
+                    </p>
+                </div>
+                <div class="flex justify-end mt-4 space-x-2">
+                        {{-- 編集ボタン --}}
+                        <a href="{{ route('games.edit', $game->id) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:border-indigo-900 focus:ring ring-indigo-300 disabled:opacity-25 transition ease-in-out duration-150">
+                            {{ __('編集') }}
+                        </a>
+
+                        {{-- ★削除フォームを追加/修正★ --}}
+                        <form action="{{ route('games.destroy', $game->id) }}" method="POST" id="gameDeleteForm"> {{-- ★IDを追加★ --}}
+                            @csrf
+                            @method('DELETE') {{-- DELETEメソッドを使用 --}}
+                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 active:bg-red-900 focus:outline-none focus:border-red-900 focus:ring ring-red-300 disabled:opacity-25 transition ease-in-out duration-150">
+                                {{ __('削除') }}
+                            </button>
+                        </form>
+                </div>
         </div>
 
         {{-- 試合別選手成績 --}}
