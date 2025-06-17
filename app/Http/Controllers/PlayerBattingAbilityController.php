@@ -23,7 +23,7 @@ class PlayerBattingAbilityController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Player $player)
     {
         // フォームで選択できる年度のリストを作成 (例: 現在の年-5年から現在の年+1年まで)
         $currentYear = Carbon::now()->year;

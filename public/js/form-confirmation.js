@@ -1,10 +1,8 @@
 const playerForm = document.getElementById('playerCreationForm');
 const gameEditForm = document.getElementById('gameEditForm');     // 試合編集フォーム用
 const gameDeleteForm = document.getElementById('gameDeleteForm');
+const battingDeleteForm = document.getElementById('battingDeleteForm');
 
-    console.log('playerForm element:', playerForm);
-    console.log('gameEditForm element:', gameEditForm);
-    console.log('gameDeleteForm element:', gameDeleteForm);
 
 
     // フォーム送信時の確認のダイアログ (選手フォーム用)
@@ -24,9 +22,18 @@ const gameDeleteForm = document.getElementById('gameDeleteForm');
             }
         });
     }
-        if(gameDeleteForm){
+
+    if(gameDeleteForm){
             gameDeleteForm.addEventListener('submit',(e)=>{
                 if(!confirm('本当にこの試合を削除してもいいですか')){
+                    e.preventDefault();
+                }
+            });
+        }
+
+    if(battingDeleteForm){
+            battingDeleteForm.addEventListener('submit',(e)=>{
+                if(!confirm('本当にこの打撃能力データを削除してもいいですか')){
                     e.preventDefault();
                 }
             });
