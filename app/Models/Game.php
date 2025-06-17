@@ -18,8 +18,7 @@ class Game extends Model
         'home_score',
         'away_score',
         'stadium',
-        'home_score',
-        'away_score',
+        'game_result',
     ];
 
         protected $casts = [

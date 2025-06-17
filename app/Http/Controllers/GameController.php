@@ -87,9 +87,12 @@ class GameController extends Controller
             'game_date' => 'required|date',
             'game_time' => 'required|date_format:H:i', // HH:MM形式で必須
             'stadium' => 'required|string|max:255', // 球場名を必須に（文字列として受け取る）
-            'home_score' => 'nullable|integer|min:0', // nullableに変更
-            'away_score' => 'nullable|integer|min:0', // nullableに変更
+            'home_score' => 'required|integer|min:0', // requiredに変更
+            'away_score' => 'required|integer|min:0', // requiredに変更
         ]);
+
+        // ★デバッグポイント1: バリデーション直後のデータを確認★
+        // dump('Debug Point 1: Validated Data', $validatedData);
 
         DB::beginTransaction(); // トランザクション開始
         try {
@@ -97,9 +100,9 @@ class GameController extends Controller
             $gameResult = null;
             if (isset($validatedData['home_score']) && isset($validatedData['away_score'])) {
                 if ($validatedData['home_score'] > $validatedData['away_score']) {
-                    $gameResult = 'Win'; // ホームチーム目線で「勝ち」
+                    $gameResult = 'Home Win'; // ホームチーム目線で「勝ち」
                 } elseif ($validatedData['home_score'] < $validatedData['away_score']) {
-                    $gameResult = 'Loss'; // ホームチーム目線で「負け」
+                    $gameResult = 'Away Win'; // ホームチーム目線で「負け」
                 } else {
                     $gameResult = 'Draw'; // 引き分け
                 }
@@ -116,6 +119,20 @@ class GameController extends Controller
                 'away_score' => $validatedData['away_score'],
                 'game_result' => $gameResult,
             ]);
+
+            // $dataToCreate = [
+            //     'home_team_id' => $validatedData['home_team_id'],
+            //     'away_team_id' => $validatedData['away_team_id'],
+            //     'game_date' => $validatedData['game_date'],
+            //     'game_time' => $validatedData['game_time'],
+            //     'stadium' => $validatedData['stadium'],
+            //     'home_score' => $validatedData['home_score'],
+            //     'away_score' => $validatedData['away_score'],
+            //     'game_result' => $gameResult,
+            // ];
+
+            // // ★デバッグポイント2: Game::create() に渡す直前のデータを確認 (dumpを使う)★
+            // dump('Debug Point 2: Data before create', $dataToCreate); // dd() の代わりに dump()
 
             DB::commit(); // トランザクションコミット
             return redirect()->route('games.index')->with('success', '新しい試合が正常に登録されました！');
