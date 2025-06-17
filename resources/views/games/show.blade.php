@@ -56,7 +56,7 @@
                         </a>
 
                         {{-- ★削除フォームを追加/修正★ --}}
-                        <form action="{{ route('games.destroy', $game->id) }}" method="POST" id="gameDeleteForm"> {{-- ★IDを追加★ --}}
+                        <form action="{{ route('games.destroy', $game->id) }}" method="POST" id="gameDeleteForm">
                             @csrf
                             @method('DELETE') {{-- DELETEメソッドを使用 --}}
                             <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 active:bg-red-900 focus:outline-none focus:border-red-900 focus:ring ring-red-300 disabled:opacity-25 transition ease-in-out duration-150">
@@ -125,4 +125,5 @@
             </a>
         </div>
     </div>
+    <script src="{{asset('js/form-confirmation.js')}}"></script>
 </x-app-layout>
