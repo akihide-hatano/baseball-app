@@ -5,6 +5,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PlayerController; // コントローラーをuseする
 use App\Http\Controllers\TeamController;   // コントローラーをuseする
 use App\Http\Controllers\GameController;
+use App\Http\Controllers\PlayerBattingAbilityController;
 
 // トップページ（ルートURL）
 Route::get('/', function () {
@@ -69,7 +70,26 @@ Route::middleware('auth')->group(function () {
     // 6. 詳細表示 (最も一般的な動的パス)
     Route::get('/games/{game}', [GameController::class, 'show'])->name('games.show');
     // 7. 一覧表示 (固定パスだが、動的パスと衝突しないように最後に近い位置)
-    Route::get('/games', [GameController::class, 'index'])->name('games.index');
+
+ // 新規能力作成フォームの表示
+    Route::get('/players/{player}/batting-abilities/create', [PlayerBattingAbilityController::class, 'create'])
+        ->name('players.batting-abilities.create');
+
+    // 新規能力データの保存 (POSTメソッドとRESTfulなURL)
+    Route::post('/players/{player}/batting-abilities', [PlayerBattingAbilityController::class, 'store'])
+        ->name('players.batting-abilities.store');
+
+    // 既存能力編集フォームの表示 (特定の能力IDをURLに含める)
+    Route::get('/players/{player}/batting-abilities/{playerBattingAbility}/edit', [PlayerBattingAbilityController::class, 'edit'])
+        ->name('players.batting-abilities.edit');
+
+    // 既存能力データの更新 (PATCHメソッドとRESTfulなURL、特定の能力IDをURLに含める)
+    Route::patch('/players/{player}/batting-abilities/{playerBattingAbility}', [PlayerBattingAbilityController::class, 'update'])
+        ->name('players.batting-abilities.update');
+
+    // 既存能力データの削除 (DELETEメソッドとRESTfulなURL、特定の能力IDをURLに含める)
+    Route::delete('/players/{player}/batting-abilities/{playerBattingAbility}', [PlayerBattingAbilityController::class, 'destroy']) // 'destory' -> 'destroy' に修正
+        ->name('players.batting-abilities.destroy');
 });
 
 require __DIR__.'/auth.php';
