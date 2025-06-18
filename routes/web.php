@@ -13,11 +13,11 @@ use App\Http\Controllers\PlayerPitchingAbilityController;
 Route::get('/', function () {
     // ユーザーが認証済み（ログイン済み）であれば、ダッシュボードへリダイレクト
     if (Auth::check()) {
-        return redirect()->route('dashboard');
+        return redirect()->route('home');
     }
     // 認証されていなければ、ログインページへリダイレクト
     return redirect()->route('login');
-})->name('home');
+})->name('root_redirect');
 
 // Breezeの認証ルート
 require __DIR__.'/auth.php';
@@ -25,9 +25,9 @@ require __DIR__.'/auth.php';
 // Profileルート (Breezeの場合)
 Route::middleware('auth')->group(function () {
     // ★★★ ここに dashboard ルートを追加 ★★★
-    Route::get('/dashboard', function () {
+    Route::get('/home', function () {
         return view('dashboard');
-    })->name('dashboard');
+    })->name('home');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
