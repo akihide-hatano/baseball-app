@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Player; // Playerモデルをuseする
 use App\Models\PlayerPitchingAbility; // PlayerPitchingAbilityモデルをuseする
 use Illuminate\Http\Request;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PlayerPitchingAbilityController extends Controller
 {
@@ -23,8 +26,13 @@ class PlayerPitchingAbilityController extends Controller
      */
     public function create(Player $player) // Playerモデルをルートモデルバインディングで受け取る
     {
-        // return view('player_pitching_abilities.create', compact('player'));
-        return "選手ID: {$player->id} の新しい投手能力追加フォーム";
+       // フォームで選択できる年度のリストを作成 (例: 現在の年-5年から現在の年+1年まで)
+        $currentYear = Carbon::now()->year;
+        $years = range( $currentYear -5, $currentYear +1 );
+
+        $allPitchTypes = ['カーブ', 'スライダー', 'フォーク', 'チェンジアップ',
+                'シュート', 'カットボール', 'シンカー'];
+        return view( 'player_pitching_abilities.create',compact('player','years','allPitchTypes'));
     }
 
     /**
