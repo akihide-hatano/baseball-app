@@ -22,6 +22,21 @@
                 <p class="md:col-span-2"><strong>出身地:</strong> <span class="text-blue-700">{{ $player->hometown ?? '-' }}</span></p>
                 <p class="md:col-span-2"><strong>説明:</strong> <span class="text-blue-700">{{ $player->description ?? '-' }}</span></p>
             </div>
+            {{-- buttonの追記 --}}
+            <div class="mt-8 pt-6 border-t border-gray-200 flex justify-end space-x-4">
+                {{-- 編集ボタン --}}
+                <a href="{{ route('players.edit',$player->id) }}" class="inline-block bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded text-lg transition duration-300 transform hover:scale-105">
+                選手を編集
+                </a>
+                {{-- 選手の削除フォーム --}}
+                <form action="{{ route('players.destroy',$player->id)}}" id="playerDeleteForm" method="post">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="inline-block bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-lg transition duration-300 transform hover:scale-105">
+                        選手を削除
+                    </button>
+                </form>
+            </div>
         </div>
 
         {{-- 打撃能力チャートと総合ランクチャートのFlexコンテナ --}}
