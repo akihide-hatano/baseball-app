@@ -6,6 +6,8 @@ use App\Http\Controllers\PlayerController; // コントローラーをuseする
 use App\Http\Controllers\TeamController;   // コントローラーをuseする
 use App\Http\Controllers\GameController;
 use App\Http\Controllers\PlayerBattingAbilityController; // ★PlayerBattingAbilityController をuseする
+use App\Http\Controllers\PlayerPitchingAbilityController;
+use App\Models\PlayerPitchingAbility;
 
 // トップページ（ルートURL）
 Route::get('/', function () {
@@ -63,25 +65,35 @@ Route::middleware('auth')->group(function () {
     // 新規能力作成フォームの表示
     Route::get('/players/{player}/batting-abilities/create', [PlayerBattingAbilityController::class, 'create'])
         ->name('players.batting-abilities.create');
-
     // 新規能力データの保存 (POSTメソッド、RESTfulなURL)
     Route::post('/players/{player}/batting-abilities', [PlayerBattingAbilityController::class, 'store'])
         ->name('players.batting-abilities.store');
-
     // 既存能力編集フォームの表示 (特定の能力IDをURLに含める)
     Route::get('/players/{player}/batting-abilities/{playerBattingAbility}/edit', [PlayerBattingAbilityController::class, 'edit'])
         ->name('players.batting-abilities.edit');
-
     // 既存能力データの更新 (PATCHメソッド、RESTfulなURL、特定の能力IDをURLに含める)
     Route::patch('/players/{player}/batting-abilities/{playerBattingAbility}', [PlayerBattingAbilityController::class, 'update'])
         ->name('players.batting-abilities.update');
-
     // 既存能力データの削除 (DELETEメソッド、RESTfulなURL、特定の能力IDをURLに含める)
     Route::delete('/players/{player}/batting-abilities/{playerBattingAbility}', [PlayerBattingAbilityController::class, 'destroy'])
         ->name('players.batting-abilities.destroy');
 
-    // index と show は選手詳細ページで表示されるため、ここではウェブページとしてのルートは定義しません。
-    // 必要であれば後から追加できます (例: Route::get('/players/{player}/batting-abilities', ...)->name('players.batting-abilities.index');)
+    //ピッチャーの能力のルーティング
+    //createのメソッド
+    Route::get('players/{player}/pitching-abilities/create',[PlayerPitchingAbilityController::class,'create'])
+        ->name('players.pitching-abilities.create');
+    //storeのメソッド
+    Route::post('players/{player}/pitching-abilities',[PlayerPitchingAbilityController::class,'store'])
+        ->name('players.pitching-abilities.store');
+    //既存能力データの編集<edit>
+        Route::get('players/{player}/pitching-abilities/{playerPitcingAbility}/edit',[PlayerPitchingAbilityController::class,'edit'])
+        ->name('players.pitching-abilities.edit');
+    //既存能力データの更新<patch>
+        Route::patch('players/{player}/pitching-abilities/{playerPitcingAbility}',[PlayerPitchingAbilityController::class,'update'])
+        ->name('players.pitching-abilities.update');
+    //既存能力データの削除<delete>
+        Route::delete('players/{player}/pitching-abilities/{playerPitcingAbility}',[PlayerPitchingAbilityController::class,'destroy'])
+        ->name('players.pitching-abilities.destroy');
 });
 
 // Breezeの認証ルート (通常は1つで十分です)
