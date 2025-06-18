@@ -111,10 +111,6 @@ class PlayerPitchingAbilityController extends Controller
     {
         $currentYear = Carbon::now()->year;
         $years = range( $currentYear -5 , $currentYear +1);
-
-
-        dd($playerPitchingAbility);
-        
         $allPitchTypes = [
             'ストレート', 'カーブ', 'スライダー', 'フォーク', 'チェンジアップ',
             'シュート', 'カットボール', 'シンカー', 'ツーシーム', 'スプリット', 'ナックル'

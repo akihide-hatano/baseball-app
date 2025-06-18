@@ -71,72 +71,72 @@
             </div>
         </div>
                     {{-- ★★★ ここから追加 ★★★ --}}
-<div class="bg-white shadow-xl rounded-lg p-8 mb-8">
-    <h2 class="text-2xl font-bold mb-4 text-indigo-700">打撃能力データ管理</h2>
+        <div class="bg-white shadow-xl rounded-lg p-8 mb-8">
+            <h2 class="text-2xl font-bold mb-4 text-indigo-700">打撃能力データ管理</h2>
 
-    {{-- 新しい打撃能力を追加するボタン --}}
-    <div class="mb-6">
-        <a href="{{ route('players.batting-abilities.create', $player->id) }}" class="inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full text-lg transition duration-300 transform hover:scale-105">
-            新しい打撃能力を追加
-        </a>
-    </div>
+            {{-- 新しい打撃能力を追加するボタン --}}
+            <div class="mb-6">
+                <a href="{{ route('players.batting-abilities.create', $player->id) }}" class="inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full text-lg transition duration-300 transform hover:scale-105">
+                    新しい打撃能力を追加
+                </a>
+            </div>
 
-    {{-- 年度別打撃能力の一覧表示（PlayerBattingAbilityモデルのデータ） --}}
-    <h3 class="text-xl font-bold mb-4 text-indigo-600">登録済み打撃能力一覧</h3>
-    @if($player->battingAbilities->isEmpty()) {{-- ★ リレーション名が正しいか確認してください (例: playerBattingAbilities) ★ --}}
-        <p class="text-gray-600">この選手の打撃能力データはまだ登録されていません。</p>
-    @else
-        <div class="overflow-x-auto">
-            <table class="min-w-full bg-white border border-gray-200 rounded-lg">
-                <thead class="bg-purple-100 text-purple-800">
-                    <tr>
-                        <th class="py-3 px-4 border-b text-left">年度</th>
-                        <th class="py-3 px-4 border-b text-left">ミート</th>
-                        <th class="py-3 px-4 border-b text-left">パワー</th>
-                        <th class="py-3 px-4 border-b text-left">走力</th>
-                        <th class="py-3 px-4 border-b text-left">守備</th>
-                        <th class="py-3 px-4 border-b text-left">肩</th>
-                        <th class="py-3 px-4 border-b text-left">捕球</th>
-                        <th class="py-3 px-4 border-b text-left">総合ランク</th>
-                        <th class="py-3 px-4 border-b text-left">特殊能力</th>
-                        <th class="py-3 px-4 border-b text-left">操作</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($player->battingAbilities as $stat) {{-- ★ リレーション名が正しいか確認してください ★ --}}
-                        <tr class="hover:bg-gray-50 {{ $loop->even ? 'bg-gray-50' : '' }}">
-                            <td class="py-3 px-4 border-b">{{ $stat->year }}</td>
-                            <td class="py-3 px-4 border-b">{{ $stat->contact_power }}</td>
-                            <td class="py-3 px-4 border-b">{{ $stat->power }}</td>
-                            <td class="py-3 px-4 border-b">{{ $stat->speed }}</td>
-                            <td class="py-3 px-4 border-b">{{ $stat->fielding }}</td>
-                            <td class="py-3 px-4 border-b">{{ $stat->throwing }}</td>
-                            <td class="py-3 px-4 border-b">{{ $stat->reaction }}</td>
-                            <td class="py-3 px-4 border-b">{{ $stat->overall_rank }}</td>
-                            <td class="py-3 px-4 border-b">{{ $stat->special_skills ?? '-' }}</td>
-                            <td class="py-3 px-4 border-b flex space-x-2">
-                                {{-- 編集ボタン --}}
-                                <a href="{{ route('players.batting-abilities.edit', ['player' => $player->id, 'playerBattingAbility' => $stat->id]) }}" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded text-sm">
-                                    編集
-                                </a>
+            {{-- 年度別打撃能力の一覧表示（PlayerBattingAbilityモデルのデータ） --}}
+            <h3 class="text-xl font-bold mb-4 text-indigo-600">登録済み打撃能力一覧</h3>
+            @if($player->battingAbilities->isEmpty()) {{-- ★ リレーション名が正しいか確認してください (例: playerBattingAbilities) ★ --}}
+                <p class="text-gray-600">この選手の打撃能力データはまだ登録されていません。</p>
+            @else
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                        <thead class="bg-purple-100 text-purple-800">
+                            <tr>
+                                <th class="py-3 px-4 border-b text-left">年度</th>
+                                <th class="py-3 px-4 border-b text-left">ミート</th>
+                                <th class="py-3 px-4 border-b text-left">パワー</th>
+                                <th class="py-3 px-4 border-b text-left">走力</th>
+                                <th class="py-3 px-4 border-b text-left">守備</th>
+                                <th class="py-3 px-4 border-b text-left">肩</th>
+                                <th class="py-3 px-4 border-b text-left">捕球</th>
+                                <th class="py-3 px-4 border-b text-left">総合ランク</th>
+                                <th class="py-3 px-4 border-b text-left">特殊能力</th>
+                                <th class="py-3 px-4 border-b text-left">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($player->battingAbilities as $stat) {{-- ★ リレーション名が正しいか確認してください ★ --}}
+                                <tr class="hover:bg-gray-50 {{ $loop->even ? 'bg-gray-50' : '' }}">
+                                    <td class="py-3 px-4 border-b">{{ $stat->year }}</td>
+                                    <td class="py-3 px-4 border-b">{{ $stat->contact_power }}</td>
+                                    <td class="py-3 px-4 border-b">{{ $stat->power }}</td>
+                                    <td class="py-3 px-4 border-b">{{ $stat->speed }}</td>
+                                    <td class="py-3 px-4 border-b">{{ $stat->fielding }}</td>
+                                    <td class="py-3 px-4 border-b">{{ $stat->throwing }}</td>
+                                    <td class="py-3 px-4 border-b">{{ $stat->reaction }}</td>
+                                    <td class="py-3 px-4 border-b">{{ $stat->overall_rank }}</td>
+                                    <td class="py-3 px-4 border-b">{{ $stat->special_skills ?? '-' }}</td>
+                                    <td class="py-3 px-4 border-b flex space-x-2">
+                                        {{-- 編集ボタン --}}
+                                        <a href="{{ route('players.batting-abilities.edit', ['player' => $player->id, 'playerBattingAbility' => $stat->id]) }}" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded text-sm">
+                                            編集
+                                        </a>
 
-                                {{-- 削除フォーム --}}
-                                <form action="{{ route('players.batting-abilities.destroy', ['player' => $player->id, 'playerBattingAbility' => $stat->id]) }}" method="POST" id="battingDeleteForm">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded text-sm">
-                                        削除
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                                        {{-- 削除フォーム --}}
+                                        <form action="{{ route('players.batting-abilities.destroy', ['player' => $player->id, 'playerBattingAbility' => $stat->id]) }}" method="POST" id="battingDeleteForm">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded text-sm">
+                                                削除
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
         </div>
-    @endif
-</div>
-{{-- ★★★ ここまで追加 ★★★ --}}
+        {{-- ★★★ ここまで追加 ★★★ --}}
 
         {{-- 投手能力チャート群のFlexコンテナ (新しいセクション) --}}
         <div class="flex flex-col md:flex-row gap-8 mb-8">
@@ -216,6 +216,78 @@
                 @endif
             </div>
         </div>
+
+        {{-- ★★★ ここから投手能力データ管理を追加 ★★★ --}}
+<div class="bg-white shadow-xl rounded-lg p-8 mb-8">
+    <h2 class="text-2xl font-bold mb-4 text-indigo-700">投手能力データ管理</h2>
+
+    {{-- 新しい投手能力を追加するボタン --}}
+    <div class="mb-6">
+        <a href="{{ route('players.pitching-abilities.create', $player->id) }}" class="inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full text-lg transition duration-300 transform hover:scale-105">
+            新しい投手能力を追加
+        </a>
+    </div>
+
+    {{-- 年度別投手能力の一覧表示（PlayerPitchingAbilityモデルのデータ） --}}
+    <h3 class="text-xl font-bold mb-4 text-indigo-600">登録済み投手能力一覧</h3>
+    @if($player->pitchingAbilities->isEmpty()) {{-- ここでリレーション名を `pitchingAbilities` と仮定 --}}
+        <p class="text-gray-600">この選手の投手能力データはまだ登録されていません。</p>
+    @else
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                <thead class="bg-indigo-100 text-indigo-800"> {{-- 色を打撃能力と変えてみました --}}
+                    <tr>
+                        <th class="py-3 px-4 border-b text-left">年度</th>
+                        <th class="py-3 px-4 border-b text-left">球速(平均)</th>
+                        <th class="py-3 px-4 border-b text-left">スタミナ</th>
+                        <th class="py-3 px-4 border-b text-left">コントロール</th>
+                        @for ($i = 1; $i <= 7; $i++)
+                            <th class="py-3 px-4 border-b text-left">変化球{{ $i }}</th>
+                        @endfor
+                        <th class="py-3 px-4 border-b text-left">総合ランク</th>
+                        <th class="py-3 px-4 border-b text-left">特殊能力</th>
+                        <th class="py-3 px-4 border-b text-left">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($player->pitchingAbilities as $stat) {{-- ここでリレーション名を `pitchingAbilities` と仮定 --}}
+                        <tr class="hover:bg-gray-50 {{ $loop->even ? 'bg-gray-50' : '' }}">
+                            <td class="py-3 px-4 border-b">{{ $stat->year ?? '-' }}</td>
+                            <td class="py-3 px-4 border-b">{{ $stat->average_velocity ?? '-' }}</td>
+                            <td class="py-3 px-4 border-b">{{ $stat->pitch_stamina ?? '-' }}</td>
+                            <td class="py-3 px-4 border-b">{{ $stat->pitch_control ?? '-' }}</td>
+                            @for ($i = 1; $i <= 7; $i++)
+                                @php
+                                    $pitchTypeField = 'pitch_type_' . $i;
+                                    $pitchInfo = $stat->$pitchTypeField;
+                                @endphp
+                                <td class="py-3 px-4 border-b">{{ $pitchInfo ?? '-' }}</td>
+                            @endfor
+                            <td class="py-3 px-4 border-b">{{ $stat->overall_rank ?? '-' }}</td>
+                            <td class="py-3 px-4 border-b">{{ $stat->special_skills ?? '-' }}</td>
+                            <td class="py-3 px-4 border-b flex space-x-2">
+                                {{-- 編集ボタン --}}
+                                <a href="{{ route('players.pitching-abilities.edit', ['player' => $player->id, 'playerPitchingAbility' => $stat->id]) }}" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded text-sm">
+                                    編集
+                                </a>
+
+                                {{-- 削除フォーム --}}
+                                <form action="{{ route('players.pitching-abilities.destroy', ['player' => $player->id, 'playerPitchingAbility' => $stat->id]) }}" method="POST" onsubmit="return confirm('本当にこの投手能力データを削除しますか？');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded text-sm">
+                                        削除
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
+</div>
+{{-- ★★★ ここまで投手能力データ管理を追加 ★★★ --}}
 
         {{-- ★旧「球速」セクションを削除、またはこのコメントのように残す★ --}}
         {{-- 以前の球速単体表示のセクションは削除しました。比較グラフが代わりに表示されます。 --}}
