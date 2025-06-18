@@ -7,7 +7,7 @@
 
         <div class="flex items-center space-x-6"> {{-- ナビゲーションリンクと認証関連のコンテナ --}}
             {{-- 通常のナビゲーションリンク --}}
-            <a href="{{ route('dashboard') }}" class="text-white hover:text-blue-200 font-bold text-lg px-4 py-2 rounded-md transition duration-300 ease-in-out hover:bg-blue-700">ダッシュボード</a>
+            <a href="{{ route('home') }}" class="text-white hover:text-blue-200 font-bold text-lg px-4 py-2 rounded-md transition duration-300 ease-in-out hover:bg-blue-700">ダッシュボード</a>
             <a href="{{ route('players.index') }}" class="text-white hover:text-blue-200 font-bold text-lg px-4 py-2 rounded-md transition duration-300 ease-in-out hover:bg-blue-700">選手一覧</a>
             <a href="{{ route('teams.index') }}" class="text-white hover:text-blue-200 font-bold text-lg px-4 py-2 rounded-md transition duration-300 ease-in-out hover:bg-blue-700">チーム一覧</a>
             <a href="{{ route('games.index') }}" class="text-white hover:text-blue-200 font-bold text-lg px-4 py-2 rounded-md transition duration-300 ease-in-out hover:bg-blue-700">試合一覧</a>
