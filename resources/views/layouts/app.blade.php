@@ -7,6 +7,10 @@
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
+        {{-- 例: .png ファイルを使用する場合 --}}
+        {{-- <link rel="icon" href="{{ asset('logo.png') }}" type="image/png"> --}}
+        <link rel="icon" href="{{ asset('image/logo.png') }}" type="image/png">
+
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
