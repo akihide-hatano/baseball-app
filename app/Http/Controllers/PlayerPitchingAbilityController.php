@@ -40,9 +40,58 @@ class PlayerPitchingAbilityController extends Controller
      */
     public function store(Request $request, Player $player) // Playerモデルをルートモデルバインディングで受け取る
     {
-        // 実際にはここでバリデーションと保存処理を行います
-        // 例: return redirect()->route('players.show', $player->id)->with('success', '投手能力を追加しました。');
-        return "選手ID: {$player->id} に新しい投手能力を保存する処理";
+        //バリデーションルールを定義
+        $rules = [
+                    'year' => 'required|integer|min:1900|max:2100|unique:player_pitching_abilities,year,NULL,id,player_id,' . $player->id,
+                    'average_velocity' => 'nullable|numeric|min:50|max:200',
+                    'pitch_stamina' => 'nullable|integer|min:1|max:99',
+                    'pitch_control' => 'nullable|integer|min:1|max:99',
+                    'overall_rank' => 'nullable|integer|min:1|max:99',
+                    'special_skills' => 'nullable|string|max:500',
+                ];
+
+        // 変化球のバリデーションルールを動的に追加
+        for ($i = 1; $i <= 7; $i++) {
+            $rules['pitch_type_' . $i . '_name'] = 'nullable|string|max:50';
+            $rules['pitch_type_' . $i . '_level'] = 'nullable|integer|min:0|max:7';
+        }
+
+        $validatedData = $request->validate($rules);
+
+        DB::beginTransaction();
+        try {
+            // 変化球データを結合して保存形式に変換
+            $pitchTypeDataForDb = [];
+            for ($i = 1; $i <= 7; $i++) {
+                $pitchName = $validatedData['pitch_type_' . $i . '_name'] ?? null;
+                $pitchLevel = $validatedData['pitch_type_' . $i . '_level'] ?? null;
+
+                if (!empty($pitchName) && !is_null($pitchLevel)) {
+                    $pitchTypeDataForDb['pitch_type_' . $i] = $pitchName . ':' . $pitchLevel;
+                } else {
+                    $pitchTypeDataForDb['pitch_type_' . $i] = null; // 値がない場合はnull
+                }
+            }
+
+            // PlayerPitchingAbilityモデルを使用してデータを保存
+            PlayerPitchingAbility::create(array_merge([
+                'player_id'        => $player->id,
+                'year'             => $validatedData['year'],
+                'average_velocity' => $validatedData['average_velocity'] ?? null,
+                'pitch_stamina'    => $validatedData['pitch_stamina'] ?? null,
+                'pitch_control'    => $validatedData['pitch_control'] ?? null,
+                'overall_rank'     => $validatedData['overall_rank'] ?? null,
+                'special_skills'   => $validatedData['special_skills'] ?? null,
+            ], $pitchTypeDataForDb)); // 結合した変化球データをマージ
+
+            DB::commit();
+            return redirect()->route('players.show', $player->id)->with('success', '新しい投手能力データが正常に登録されました！');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("投手能力登録エラー: " . $e->getMessage(), ['exception' => $e, 'request' => $request->all()]);
+            return back()->withInput()->withErrors(['error' => '投手能力データの登録中にエラーが発生しました: ' . $e->getMessage()]);
+        }
     }
 
     /**
