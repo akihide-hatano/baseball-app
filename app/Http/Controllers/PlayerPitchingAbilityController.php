@@ -109,8 +109,15 @@ class PlayerPitchingAbilityController extends Controller
      */
     public function edit(Player $player, PlayerPitchingAbility $playerPitchingAbility) // PlayerモデルとPlayerPitchingAbilityモデルをルートモデルバインディングで受け取る
     {
-        // return view('player_pitching_abilities.edit', compact('player', 'playerPitchingAbility'));
-        return "選手ID: {$player->id} の投手能力ID: {$playerPitchingAbility->id} の編集フォーム";
+        $currentYear = Carbon::now()->year;
+        $years = range( $currentYear -5 , $currentYear +1);
+
+        $allPitchTypes = [
+            'ストレート', 'カーブ', 'スライダー', 'フォーク', 'チェンジアップ',
+            'シュート', 'カットボール', 'シンカー', 'ツーシーム', 'スプリット', 'ナックル'
+        ];
+
+        return view('player_pitching_abilities.edit',compact('player','playerPitchingAbility','years','allPitchTypes'));
     }
 
     /**
