@@ -1,21 +1,22 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\PlayerController; // コントローラーをuseする
-use App\Http\Controllers\TeamController;   // コントローラーをuseする
+use App\Http\Controllers\PlayerController;
+use App\Http\Controllers\TeamController;
 use App\Http\Controllers\GameController;
-use App\Http\Controllers\PlayerBattingAbilityController; // ★PlayerBattingAbilityController をuseする
+use App\Http\Controllers\PlayerBattingAbilityController;
 use App\Http\Controllers\PlayerPitchingAbilityController;
-use App\Models\PlayerPitchingAbility;
 
-// トップページ（ルートURL）
+// トップページ（ルートURL /）へのアクセスを処理
 Route::get('/', function () {
-    return view('welcome');
-});
-
-Route::get('/home', function () {
-    return view('home');
+    // ユーザーが認証済み（ログイン済み）であれば、ダッシュボードへリダイレクト
+    if (Auth::check()) {
+        return redirect()->route('dashboard');
+    }
+    // 認証されていなければ、ログインページへリダイレクト
+    return redirect()->route('login');
 })->name('home');
 
 // Breezeの認証ルート
@@ -23,6 +24,11 @@ require __DIR__.'/auth.php';
 
 // Profileルート (Breezeの場合)
 Route::middleware('auth')->group(function () {
+    // ★★★ ここに dashboard ルートを追加 ★★★
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -36,7 +42,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/players/{player}', [PlayerController::class, 'show'])->name('players.show');
     Route::get('/players', [PlayerController::class, 'index'])->name('players.index');
 
-
     // チーム関連のルート
     Route::get('/teams/create', [TeamController::class, 'create'])->name('teams.create');
     Route::post('/teams', [TeamController::class, 'store'])->name('teams.store');
@@ -46,53 +51,38 @@ Route::middleware('auth')->group(function () {
     Route::get('/teams/{team}', [TeamController::class, 'show'])->name('teams.show');
     Route::get('/teams', [TeamController::class, 'index'])->name('teams.index');
 
-
     // 試合関連のルート
     Route::get('/games/create', [GameController::class, 'create'])->name('games.create');
     Route::post('/games', [GameController::class, 'store'])->name('games.store');
     Route::get('/games/{game}/edit', [GameController::class, 'edit'])->name('games.edit');
     Route::patch('/games/{game}', [GameController::class, 'update'])->name('games.update');
-    Route::put('/games/{game}', [GameController::class, 'update']); // PATCHとPUTの両方を受け入れる場合
+    Route::put('/games/{game}', [GameController::class, 'update']);
     Route::delete('/games/{game}', [GameController::class, 'destroy'])->name('games.destroy');
     Route::get('/games/{game}', [GameController::class, 'show'])->name('games.show');
     Route::get('/games', [GameController::class, 'index'])->name('games.index');
 
-
-    // ★★★ PlayerBattingAbility のルート (修正版) ★★★
-    // 親リソースの {player} ID と子リソースの {playerBattingAbility} ID を使う
-    // ルートモデルバインディングを考慮し、パラメータ名は単数形に。
-
-    // 新規能力作成フォームの表示
+    // PlayerBattingAbility のルート
     Route::get('/players/{player}/batting-abilities/create', [PlayerBattingAbilityController::class, 'create'])
         ->name('players.batting-abilities.create');
-    // 新規能力データの保存 (POSTメソッド、RESTfulなURL)
     Route::post('/players/{player}/batting-abilities', [PlayerBattingAbilityController::class, 'store'])
         ->name('players.batting-abilities.store');
-    // 既存能力編集フォームの表示 (特定の能力IDをURLに含める)
     Route::get('/players/{player}/batting-abilities/{playerBattingAbility}/edit', [PlayerBattingAbilityController::class, 'edit'])
         ->name('players.batting-abilities.edit');
-    // 既存能力データの更新 (PATCHメソッド、RESTfulなURL、特定の能力IDをURLに含める)
     Route::patch('/players/{player}/batting-abilities/{playerBattingAbility}', [PlayerBattingAbilityController::class, 'update'])
         ->name('players.batting-abilities.update');
-    // 既存能力データの削除 (DELETEメソッド、RESTfulなURL、特定の能力IDをURLに含める)
     Route::delete('/players/{player}/batting-abilities/{playerBattingAbility}', [PlayerBattingAbilityController::class, 'destroy'])
         ->name('players.batting-abilities.destroy');
 
     //ピッチャーの能力のルーティング
-    //createのメソッド
     Route::get('players/{player}/pitching-abilities/create',[PlayerPitchingAbilityController::class,'create'])
         ->name('players.pitching-abilities.create');
-    //storeのメソッド
     Route::post('players/{player}/pitching-abilities',[PlayerPitchingAbilityController::class,'store'])
         ->name('players.pitching-abilities.store');
-    //既存能力データの編集<edit>
-        Route::get('players/{player}/pitching-abilities/{playerPitchingAbility}/edit',[PlayerPitchingAbilityController::class,'edit'])
+    Route::get('players/{player}/pitching-abilities/{playerPitchingAbility}/edit',[PlayerPitchingAbilityController::class,'edit'])
         ->name('players.pitching-abilities.edit');
-    //既存能力データの更新<patch>
-        Route::patch('players/{player}/pitching-abilities/{playerPitchingAbility}',[PlayerPitchingAbilityController::class,'update'])
+    Route::patch('players/{player}/pitching-abilities/{playerPitchingAbility}',[PlayerPitchingAbilityController::class,'update'])
         ->name('players.pitching-abilities.update');
-    //既存能力データの削除<delete>
-        Route::delete('players/{player}/pitching-abilities/{playerPitchingAbility}',[PlayerPitchingAbilityController::class,'destroy'])
+    Route::delete('players/{player}/pitching-abilities/{playerPitchingAbility}',[PlayerPitchingAbilityController::class,'destroy'])
         ->name('players.pitching-abilities.destroy');
 });
 
