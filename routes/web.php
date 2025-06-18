@@ -86,13 +86,13 @@ Route::middleware('auth')->group(function () {
     Route::post('players/{player}/pitching-abilities',[PlayerPitchingAbilityController::class,'store'])
         ->name('players.pitching-abilities.store');
     //既存能力データの編集<edit>
-        Route::get('players/{player}/pitching-abilities/{playerPitcingAbility}/edit',[PlayerPitchingAbilityController::class,'edit'])
+        Route::get('players/{player}/pitching-abilities/{playerPitchingAbility}/edit',[PlayerPitchingAbilityController::class,'edit'])
         ->name('players.pitching-abilities.edit');
     //既存能力データの更新<patch>
-        Route::patch('players/{player}/pitching-abilities/{playerPitcingAbility}',[PlayerPitchingAbilityController::class,'update'])
+        Route::patch('players/{player}/pitching-abilities/{playerPitchingAbility}',[PlayerPitchingAbilityController::class,'update'])
         ->name('players.pitching-abilities.update');
     //既存能力データの削除<delete>
-        Route::delete('players/{player}/pitching-abilities/{playerPitcingAbility}',[PlayerPitchingAbilityController::class,'destroy'])
+        Route::delete('players/{player}/pitching-abilities/{playerPitchingAbility}',[PlayerPitchingAbilityController::class,'destroy'])
         ->name('players.pitching-abilities.destroy');
 });
 
