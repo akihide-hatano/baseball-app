@@ -74,18 +74,20 @@
                         {{-- 変化球の種類とレベル (pitch_type_1 から pitch_type_7) --}}
                         <h3 class="text-lg font-semibold mt-6 mb-3 text-gray-800">変化球の種類とレベル</h3>
                         @for ($i = 1; $i <= 7; $i++)
+                            @php
+                                // コントローラーから渡された固定リスト $fixedPitchTypes を使用
+                                // $i は1から始まるので、配列のインデックスは $i - 1
+                                $currentPitchName = $allPitchTypes[$i - 1] ?? '未設定'; // 範囲外の場合は'未設定'
+                            @endphp
                             <div class="mb-4 p-3 border rounded-md shadow-sm">
                                 <label class="block text-gray-700 text-sm font-bold mb-2">変化球 {{ $i }}:</label>
                                 <div class="flex space-x-4">
                                     <div class="flex-1">
-                                        <label for="pitch_type_{{ $i }}_name" class="block text-gray-600 text-xs mb-1">球種名:</label>
-                                        <select name="pitch_type_{{ $i }}_name" id="pitch_type_{{ $i }}_name"
-                                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('pitch_type_' . $i . '_name') border-red-500 @enderror">
-                                            <option value="">選択なし</option>
-                                            @foreach($allPitchTypes as $pitchType)
-                                                <option value="{{ $pitchType }}" {{ old('pitch_type_' . $i . '_name') == $pitchType ? 'selected' : '' }}>{{ $pitchType }}</option>
-                                            @endforeach
-                                        </select>
+                                        <label class="block text-gray-600 text-xs mb-1">球種名:</label>
+                                        {{-- selectをspanとhidden inputに置き換え --}}
+                                        <span class="block w-full py-2 px-3 text-gray-700 leading-tight">{{ $currentPitchName }}</span>
+                                        <input type="hidden" name="pitch_type_{{ $i }}_name" value="{{ $currentPitchName }}">
+                                        {{-- @error('pitch_type_' . $i . '_name') はhidden inputなので通常は不要ですが、残しておいても害はありません --}}
                                         @error('pitch_type_' . $i . '_name')
                                             <p class="text-red-500 text-xs italic">{{ $message }}</p>
                                         @enderror
@@ -94,7 +96,7 @@
                                         <label for="pitch_type_{{ $i }}_level" class="block text-gray-600 text-xs mb-1">レベル (0-7):</label>
                                         <input type="number" name="pitch_type_{{ $i }}_level" id="pitch_type_{{ $i }}_level" min="0" max="7"
                                             class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('pitch_type_' . $i . '_level') border-red-500 @enderror"
-                                            value="{{ old('pitch_type_' . $i . '_level') }}">
+                                            value="{{ old('pitch_type_' . $i . '_level',0 ) }}">
                                         @error('pitch_type_' . $i . '_level')
                                             <p class="text-red-500 text-xs italic">{{ $message }}</p>
                                         @enderror
