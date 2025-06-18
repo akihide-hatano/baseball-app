@@ -9,7 +9,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-
 class PlayerBattingAbilityController extends Controller
 {
     /**
@@ -39,9 +38,45 @@ class PlayerBattingAbilityController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, Player $player,PlayerBattingAbility $playerBattingAbility)
+    // public function store(Request $request, Player $player,PlayerBattingAbility $playerBattingAbility)
+    // {
+    //     //validationのruleを定義
+    //     $validatedData = $request->validate([
+    //         'year'=> 'required|integer|min:1900|max:2100|unique:player_batting_abilities,year,NULL,id,player_id,' . $player->id,
+    //         'contact_power' => 'nullable|integer|min:0|max:100',
+    //         'power' => 'nullable|integer|min:0|max:100',
+    //         'speed' => 'nullable|integer|min:0|max:100',
+    //         'fielding' => 'nullable|integer|min:0|max:100',
+    //         'throwing' => 'nullable|integer|min:0|max:100',
+    //         'reaction' => 'nullable|integer|min:0|max:100',
+    //         'overall_rank' => 'nullable|integer|min:0|max:100',
+    //         'special_skills' => 'nullable|string|max:500',
+    //     ]);
+    //     // dump() でバリデーション後のデータを確認 (デバッグ用。後で削除またはコメントアウト)
+    //     // dump('Debug: Validated Ability Data for Update', $validatedData);
+
+    //     DB::beginTransaction();
+    //     try{
+    //         // PlayerBattingAbilityモデルを使用してデータを更新
+    //         $playerBattingAbility->update($validatedData);
+    //         DB::commit(); // トランザクションコミット
+    //         // 成功メッセージと共に選手詳細ページへリダイレクト
+    //         return redirect()->route('players.show', $player->id)->with('success', '打撃能力データが正常に更新されました！');
+    //     }catch (\Exception $e) {
+    //         DB::rollBack(); // エラー時はロールバック
+    //         Log::error("打撃能力更新エラー: " . $e->getMessage(), ['exception' => $e, 'request' => $request->all()]);
+    //         // エラーメッセージと共にフォームへ戻す
+    //         return back()->withInput()->withErrors(['error' => '打撃能力データの更新中にエラーが発生しました: ' . $e->getMessage()]);
+    //     }
+    // }
+
+/**
+     * Store a newly created resource in storage.
+     */
+    // ★★★ store メソッドの引数を修正 ★★★
+    public function store(Request $request, Player $player) // PlayerBattingAbility $playerBattingAbility を削除
     {
-        //validationのruleを定義
+        // validationのruleを定義
         $validatedData = $request->validate([
             'year'=> 'required|integer|min:1900|max:2100|unique:player_batting_abilities,year,NULL,id,player_id,' . $player->id,
             'contact_power' => 'nullable|integer|min:0|max:100',
@@ -53,21 +88,23 @@ class PlayerBattingAbilityController extends Controller
             'overall_rank' => 'nullable|integer|min:0|max:100',
             'special_skills' => 'nullable|string|max:500',
         ]);
-        // dump() でバリデーション後のデータを確認 (デバッグ用。後で削除またはコメントアウト)
-        dump('Debug: Validated Ability Data for Update', $validatedData);
 
         DB::beginTransaction();
         try{
-            // PlayerBattingAbilityモデルを使用してデータを更新
-            $playerBattingAbility->update($validatedData);
-            DB::commit(); // トランザクションコミット
-            // 成功メッセージと共に選手詳細ページへリダイレクト
-            return redirect()->route('players.show', $player->id)->with('success', '打撃能力データが正常に更新されました！');
+            // ★★★ PlayerBattingAbility の新しいインスタンスを作成し、player_id を設定して保存 ★★★
+            // $playerBattingAbility->update($validatedData); // この行は削除
+
+            PlayerBattingAbility::create(array_merge($validatedData, [
+                'player_id' => $player->id, // 関連するplayer_idを追加
+            ]));
+
+            DB::commit();
+            return redirect()->route('players.show', $player->id)->with('success', '打撃能力データが正常に登録されました！'); // メッセージを「登録」に変更
+
         }catch (\Exception $e) {
-            DB::rollBack(); // エラー時はロールバック
-            Log::error("打撃能力更新エラー: " . $e->getMessage(), ['exception' => $e, 'request' => $request->all()]);
-            // エラーメッセージと共にフォームへ戻す
-            return back()->withInput()->withErrors(['error' => '打撃能力データの更新中にエラーが発生しました: ' . $e->getMessage()]);
+            DB::rollBack();
+            Log::error("打撃能力登録エラー: " . $e->getMessage(), ['exception' => $e, 'request' => $request->all()]); // メッセージを「登録」に変更
+            return back()->withInput()->withErrors(['error' => '打撃能力データの登録中にエラーが発生しました: ' . $e->getMessage()]); // メッセージを「登録」に変更
         }
     }
 
