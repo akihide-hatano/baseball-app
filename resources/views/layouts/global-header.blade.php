@@ -1,7 +1,7 @@
 <header class="bg-blue-600 text-white py-6 text-center font-inter rounded-b-lg shadow-lg">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center"> {{-- flex justify-between items-center を追加 --}}
         <div class="flex justify-start items-center gap-10"> {{-- タイトルと説明のコンテナ --}}
-            <img src="/image/header-logo.png" class="w-20 h-20" alt="logo">
+            <img src="/image/header-logo.png" class="w-12 h-12" alt="logo">
             <h1 class="text-3xl font-extrabold mb-2">私のプロ野球データ管理システム</h1>
         </div>
 
