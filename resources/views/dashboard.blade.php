@@ -5,14 +5,11 @@
         </h2>
     </x-slot>
 
-    <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
-                    <p class="mb-6 text-lg">{{ __("ようこそ！ログインしました。") }}</p>
-
                     {{-- ★★★ ここからアプリの流れ/できることを追加 ★★★ --}}
-                    <div class="mt-8 p-6 bg-indigo-50 rounded-lg shadow-inner">
+                    <div class="p-6 bg-indigo-50 rounded-lg shadow-inner">
                         <h3 class="text-2xl font-bold mb-4 text-indigo-800 border-b-2 border-indigo-700 pb-2">
                             このアプリでできること
                         </h3>
@@ -115,12 +112,7 @@
                                 </div>
                             </li>
                         </ul>
-
-                        <p class="mt-6 text-center text-gray-600 text-lg font-medium">
-                            さあ、あなたのプロ野球データを管理し始めましょう！
-                        </p>
                     </div>
-                    {{-- ★★★ ここまでアプリの流れ/できることを追加 ★★★ --}}
                 </div>
             </div>
         </div>
