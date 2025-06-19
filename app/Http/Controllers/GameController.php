@@ -42,9 +42,8 @@ class GameController extends Controller
             // whereMonthを使ってgame_dateカラムの月部分をフィルタリング
             $query->whereMonth('game_date', $searchMonth);
         }
-        // ★★★ ここまで変更 ★★★
 
-        $games = $query->get(); // フィルタリングされた試合データを取得
+        $games = $query->paginate(10);
 
         // 取得した試合を日付でグループ化
         // ここは日付でグループ化するままでOKです。

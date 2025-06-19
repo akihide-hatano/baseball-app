@@ -2,15 +2,15 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center"> {{-- flex justify-between items-center を追加 --}}
         <div class="flex justify-start items-center gap-10"> {{-- タイトルと説明のコンテナ --}}
             <img src="/image/header-logo.png" class="w-12 h-12" alt="logo">
-            <h1 class="text-3xl font-extrabold mb-2">私のプロ野球データ管理システム</h1>
+            <h1 class="text-xl font-extrabold mb-2">私のプロ野球データ管理システム</h1>
         </div>
 
         <div class="flex items-center space-x-6"> {{-- ナビゲーションリンクと認証関連のコンテナ --}}
             {{-- 通常のナビゲーションリンク --}}
-            <a href="{{ route('home') }}" class="text-white hover:text-blue-200 font-bold text-lg px-4 py-2 rounded-md transition duration-300 ease-in-out hover:bg-blue-700">ホーム</a>
-            <a href="{{ route('players.index') }}" class="text-white hover:text-blue-200 font-bold text-lg px-4 py-2 rounded-md transition duration-300 ease-in-out hover:bg-blue-700">選手一覧</a>
-            <a href="{{ route('teams.index') }}" class="text-white hover:text-blue-200 font-bold text-lg px-4 py-2 rounded-md transition duration-300 ease-in-out hover:bg-blue-700">チーム一覧</a>
-            <a href="{{ route('games.index') }}" class="text-white hover:text-blue-200 font-bold text-lg px-4 py-2 rounded-md transition duration-300 ease-in-out hover:bg-blue-700">試合一覧</a>
+            <a href="{{ route('home') }}" class="text-white hover:text-blue-200 font-bold text-l px-4 py-2 rounded-md transition duration-300 ease-in-out hover:bg-blue-700">ホーム</a>
+            <a href="{{ route('players.index') }}" class="text-white hover:text-blue-200 font-bold text-l px-4 py-2 rounded-md transition duration-300 ease-in-out hover:bg-blue-700">選手一覧</a>
+            <a href="{{ route('teams.index') }}" class="text-white hover:text-blue-200 font-bold text-l px-4 py-2 rounded-md transition duration-300 ease-in-out hover:bg-blue-700">チーム一覧</a>
+            <a href="{{ route('games.index') }}" class="text-white hover:text-blue-200 font-bold text-l px-4 py-2 rounded-md transition duration-300 ease-in-out hover:bg-blue-700">試合一覧</a>
 
             {{-- 認証関連のリンク --}}
             @auth {{-- ログインしている場合 --}}
