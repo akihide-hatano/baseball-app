@@ -132,20 +132,19 @@ class GameController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($id)
+    public function show(Game $game)
     {
-        // 試合IDを使って試合を取得し、関連データをEagerロード
-        $game = Game::with([
-            'homeTeam', // ホームチーム情報をロード
-            'awayTeam', // アウェイチーム情報をロード
+
+            $game->load([ // リレーションのロードは必要に応じてロード()メソッドで実施
+            'homeTeam',
+            'awayTeam',
             'gamePlayerStats' => function ($query) {
-                // gamePlayerStats リレーション内で、選手とポジションもEagerロード
                 $query->with(['player', 'position'])
-                      ->orderBy('is_starter', 'desc') // スタメンを優先
-                      ->orderBy('batting_order', 'asc') // 打順でソート
-                      ->orderBy('player_id', 'asc'); // 同じ打順の選手はplayer_idでソート
+                    ->orderBy('is_starter', 'desc')
+                    ->orderBy('batting_order', 'asc')
+                    ->orderBy('player_id', 'asc');
             }
-        ])->find($id);
+        ]);
 
         // もし試合が見つからなかった場合
         if (!$game) {
@@ -214,7 +213,7 @@ class GameController extends Controller
 
             DB::commit();
             return redirect()->route('games.show', $game->id)
-                             ->with('success', '試合情報が更新されました！');
+                            ->with('success', '試合情報が更新されました！');
 
         } catch (\Exception $e) {
             DB::rollBack();

@@ -1,6 +1,7 @@
 <?php
 use Diglactic\Breadcrumbs\Breadcrumbs;
 use Diglactic\Breadcrumbs\Generator as BreadcrumbGenerator;
+use App\Models\Game;
 
 //home
 Breadcrumbs::for('home',function(BreadcrumbGenerator $trail){
@@ -41,7 +42,7 @@ Breadcrumbs::for('teams.index',function(BreadcrumbGenerator $trail){
 // ホーム > チーム一覧 > [チーム名] (チーム詳細)
 Breadcrumbs::for('teams.show', function (BreadcrumbGenerator $trail, $team) {
     $trail->parent('teams.index'); // 親は 'teams.index'
-    $trail->push($team->name, route('teams.show', $team)); // チーム名を表示
+    $trail->push($team->team_name, route('teams.show', $team)); // チーム名を表示
 });
 
 // ホーム > チーム一覧 > チーム作成
@@ -57,11 +58,12 @@ Breadcrumbs::for('games.index', function (BreadcrumbGenerator $trail) {
 });
 
 // ホーム > 試合一覧 > [試合ID/日付] (試合詳細)
-Breadcrumbs::for('games.show', function (BreadcrumbGenerator $trail, $game) {
+Breadcrumbs::for('games.show', function (BreadcrumbGenerator $trail, Game $game) {
     $trail->parent('games.index'); // 親は 'games.index'
     // 試合を識別できる情報（例: 日付やID）を表示
     $trail->push('試合詳細 (' . $game->game_date->format('Y/m/d') . ')', route('games.show', $game));
 });
+
 
 // ホーム > 試合一覧 > 試合作成
 Breadcrumbs::for('games.create', function (BreadcrumbGenerator $trail) {
