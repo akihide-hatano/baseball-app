@@ -30,7 +30,7 @@
             <main>
             {{-- ★★★ ここにパンくずリストを追加 ★★★ --}}
             @if (!empty(Breadcrumbs::current()))
-                <div class="mb-6"> {{-- マージンを追加してコンテンツと分離 --}}
+                <div class="my-6"> {{-- マージンを追加してコンテンツと分離 --}}
                     {{ Breadcrumbs::render() }}
                 </div>
             @endif
