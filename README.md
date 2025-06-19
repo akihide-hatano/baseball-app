@@ -7,44 +7,34 @@ http://the-view.work/ <br >
 画面中部のゲストログインボタンから、メールアドレスとパスワードを入力せずにログインできます。
 
 # 使用技術
-- Ruby 2.5.7
-- Ruby on Rails 5.2.4
-- MySQL 5.7
-- Nginx
-- Puma
-- AWS
-  - VPC
-  - EC2
-  - RDS
-  - Route53
-- Docker/Docker-compose
-- CircleCi CI/CD
-- Capistrano3
-- RSpec
-- Google Maps API
-
-# AWS構成図
-<img width="995" alt="スクリーンショット 2020-05-07 11 14 01" src="https://user-images.githubusercontent.com/60876388/81247155-3ccde300-9054-11ea-91eb-d06eb38a63b3.png">
-
-## CircleCi CI/CD
-- Githubへのpush時に、RspecとRubocopが自動で実行されます。
-- masterブランチへのpushでは、RspecとRubocopが成功した場合、EC2への自動デプロイが実行されます
+- **バックエンド**:
+  - Laravel 10 (PHP 8.2+)
+  - Composer
+- **データベース**: MySQL
+- **フロントエンド**:
+  - Bladeテンプレート
+  - Tailwind CSS
+  - Alpine.js
+  - Vite (アセットバンドル)
+- **認証**: Laravel Breeze
+- **開発・デプロイ環境**:
+  - Docker / Docker Compose (Laravel Sail)
+  - Git / GitHub
+- **テスト**: PHPUnit (Laravelのデフォルトテストフレームワーク)
+- **パンくずリスト**: Diglactic/laravel-breadcrumbs パッケージ
 
 # 機能一覧
-- ユーザー登録、ログイン機能(devise)
-- 投稿機能
-  - 画像投稿(refile)
-  - 位置情報検索機能(geocoder)
-- いいね機能(Ajax)
-  - ランキング機能
-- コメント機能(Ajax)
-- フォロー機能(Ajax)
-- ページネーション機能(kaminari)
-  - 無限スクロール(Ajax)
-- 検索機能(ransack)
-
-# テスト
-- RSpec
-  - 単体テスト(model)
-  - 機能テスト(request)
-  - 統合テスト(feature)
+- ユーザー認証機能（ログイン、新規登録、プロフィール編集）
+- **選手情報管理**:
+  - 選手の登録、編集、削除、一覧表示
+  - 選手詳細ページでの能力（打撃・投手）および年度別成績の記録・管理
+- **チーム情報管理**:
+  - チームの登録、編集、削除、一覧表示
+  - チーム詳細ページ
+- **試合情報管理**:
+  - 試合の登録、編集、削除、一覧表示
+  - 試合詳細ページでのスコア、結果、選手成績の閲覧
+  - 試合一覧のフィルタリング（チーム、月別）とページネーション
+- **データ可視化**:
+  - 各選手の能力や成績をグラフ（レーダーチャート、棒グラフなど）で視覚化
+- パンくずリスト
