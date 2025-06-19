@@ -53,7 +53,7 @@ class GameController extends Controller
         });
 
         // 取得したグループ化された試合データと全てのチームデータをビューに渡す
-        return view('games.index', compact('groupedGames', 'teams'));
+        return view('games.index', compact('groupedGames', 'teams','games'));
     }
 
     /**

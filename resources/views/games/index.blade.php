@@ -136,6 +136,11 @@
             @endforeach
         @endif
 
+        {{-- ★★★ ここにページネーションリンクを追加 ★★★ --}}
+        <div class="mt-8">
+            {{ $games->links() }}
+        </div>
+
         <div class="text-center mt-8">
             <a href="{{ route('teams.index') }}" class="inline-block bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-full text-lg transition duration-300 transform hover:scale-105">
                 チーム一覧に戻る
