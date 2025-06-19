@@ -35,7 +35,7 @@ Breadcrumbs::for('players.edit',function(BreadcrumbGenerator $trail,$player){
 //home > チーム一覧
 Breadcrumbs::for('teams.index',function(BreadcrumbGenerator $trail){
     $trail->parent('home');
-    $trail->push('選手一覧',route('teams.index'));
+    $trail->push('チーム一覧',route('teams.index'));
 });
 
 // ホーム > チーム一覧 > [チーム名] (チーム詳細)
