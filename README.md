@@ -3,11 +3,21 @@
 プロ野球のデータを保存できるようなサイトです。<br>
 プロ野球選手の試合結果や選手各々の実績をグラフを使って可視化しました。
 
-- **Home画面**
-  ホーム画面では、このアプリでできることとして、選手・チーム・試合情報管理の主要機能が一覧できます。
+- **Home画面**<br>
   各セクションから既存データの一覧表示や、新規データの登録ページへ直接アクセス可能です。
-  これにより、野球データの管理をスムーズに開始できます。
 <img src="/public/image/home.png" alt="home" style="width: 80%;">
+
+- **Player画面**<br>
+  各セクションから既存データの一覧表示や、新規データの登録ページへ直接アクセス可能です。
+<img src="/public/image/players.png" alt="home" style="width: 80%;">
+
+- **Teams画面**<br>
+  各セクションから既存データの一覧表示や、新規データの登録ページへ直接アクセス可能です。
+<img src="/public/image/teams.png" alt="home" style="width: 80%;">
+
+- **Games画面**<br>
+  各セクションから既存データの一覧表示や、新規データの登録ページへ直接アクセス可能です。
+<img src="/public/image/games.png" alt="home" style="width: 80%;">
 
 # URL
 http://the-view.work/<br>
