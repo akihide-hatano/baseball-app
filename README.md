@@ -3,7 +3,7 @@
 プロ野球のデータを保存できるようなサイトです。<br>
 プロ野球選手の試合結果や選手各々の実績をグラフを使って可視化しました。
 
--**Home画面**
+- **Home画面**
 <img src="/public/image/home.png" alt="home" style="width: 80%;">
 
 # URL
