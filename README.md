@@ -8,15 +8,15 @@
 <img src="/public/image/home.png" alt="home" style="width: 80%;">
 
 - **Player画面**<br>
-  各セクションから既存データの一覧表示や、新規データの登録ページへ直接アクセス可能です。
+  選手の一覧を確認
 <img src="/public/image/players.png" alt="home" style="width: 80%;">
 
 - **Teams画面**<br>
-  各セクションから既存データの一覧表示や、新規データの登録ページへ直接アクセス可能です。
+  チーム一覧とチーム新規作成とチームの検索
 <img src="/public/image/teams.png" alt="home" style="width: 80%;">
 
 - **Games画面**<br>
-  各セクションから既存データの一覧表示や、新規データの登録ページへ直接アクセス可能です。
+  試合一覧と試合の検索
 <img src="/public/image/games.png" alt="home" style="width: 80%;">
 
 # URL
